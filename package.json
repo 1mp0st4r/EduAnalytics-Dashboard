@@ -6,7 +6,11 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "db:init": "node scripts/setup-database.js",
+    "db:setup": "node scripts/04-import-csv-data.js",
+    "db:test": "node -e \"require('./lib/database-service').dbService.testConnection()\"",
+    "setup": "npm run db:init && npm run db:setup"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -42,7 +46,9 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
+    "csv-parser": "^3.0.0",
     "date-fns": "4.1.0",
+    "dotenv": "^17.2.2",
     "embla-carousel-react": "8.5.1",
     "geist": "latest",
     "input-otp": "1.4.1",

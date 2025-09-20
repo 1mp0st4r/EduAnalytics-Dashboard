@@ -1,381 +1,549 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
+import { 
+  User, 
+  TrendingUp, 
+  TrendingDown, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clock, 
   BookOpen,
-  MessageCircle,
-  User,
-  AlertTriangle,
-  TrendingUp,
-  Calendar,
-  Phone,
-  Mail,
-  LogOut,
-  Send,
-  CheckCircle,
-  Clock,
   Target,
-  Heart,
+  Mail,
+  Brain,
+  BarChart3,
+  LogOut
 } from "lucide-react"
 
-interface StudentDashboardProps {
-  user: any
-  onLogout: () => void
+interface StudentData {
+  StudentID: string
+  StudentName: string
+  RiskLevel: string
+  RiskScore: number
+  DropoutProbability: number
+  AvgAttendance_LatestTerm: number
+  AvgMarks_LatestTerm: number
+  IsDropout: boolean
+  Gender: string
+  Age: number
 }
 
-export default function StudentDashboard({ user, onLogout }: StudentDashboardProps) {
-  const [feedbackText, setFeedbackText] = useState("")
-  const [selectedIssue, setSelectedIssue] = useState("")
-
-  // Mock student data - in real app, this would come from API
-  const studentData = {
-    name: "राहुल शर्मा / Rahul Sharma",
-    class: "10वीं / 10th Grade",
-    school: "सरकारी उच्च माध्यमिक विद्यालय / Govt. Higher Secondary School",
-    attendance: 78,
-    performance: 72,
-    riskLevel: "medium",
-    mentor: {
-      name: "प्रिया सिंह / Priya Singh",
-      phone: "+91 98765 43210",
-      email: "priya.singh@edusupport.gov.in",
-    },
-    recentGrades: [
-      { subject: "गणित / Math", grade: "B+", score: 78 },
-      { subject: "विज्ञान / Science", grade: "A-", score: 85 },
-      { subject: "हिंदी / Hindi", grade: "B", score: 72 },
-      { subject: "अंग्रेजी / English", grade: "C+", score: 68 },
-      { subject: "सामाजिक विज्ञान / Social Science", grade: "B+", score: 80 },
-    ],
-    aiSummary:
-      "राहुल एक मेधावी छात्र है जो गणित और विज्ञान में अच्छा प्रदर्शन कर रहा है। हालांकि, उसकी उपस्थिति में कमी चिंता का विषय है। पारिवारिक आर्थिक स्थिति के कारण वह कभी-कभी स्कूल नहीं आ पाता।",
-    proposedSolutions: [
-      "नियमित उपस्थिति के लिए प्रेरणा कार्यक्रम में भाग लें",
-      "गणित और विज्ञान में अपनी मजबूती का फायदा उठाकर अन्य विषयों में सुधार करें",
-      "आर्थिक सहायता के लिए छात्रवृत्ति योजनाओं की जानकारी लें",
-      "अंग्रेजी भाषा के लिए अतिरिक्त अभ्यास करें",
-    ],
+interface AnalyticsData {
+  statistics: {
+    totalStudents: number
+    highRiskStudents: number
+    mediumRiskStudents: number
+    lowRiskStudents: number
+    criticalRiskStudents: number
+    dropoutStudents: number
+    avgAttendance: number
+    avgPerformance: number
   }
+}
 
-  const handleFeedbackSubmit = () => {
-    if (!feedbackText.trim() || !selectedIssue) {
-      alert("कृपया समस्या का प्रकार चुनें और विवरण दें / Please select issue type and provide details")
-      return
+export default function StudentDashboard({ user, onLogout }: { user: any; onLogout: () => void }) {
+  const [studentData, setStudentData] = useState<StudentData | null>(null)
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [riskAssessment, setRiskAssessment] = useState<any>(null)
+  const [assessingRisk, setAssessingRisk] = useState(false)
+
+  // Mock student ID for demo - in real app, this would come from authentication
+  const studentId = "RJ_2025"
+
+  useEffect(() => {
+    fetchStudentData()
+    fetchAnalytics()
+  }, [])
+
+  const fetchStudentData = async () => {
+    try {
+      const response = await fetch(`/api/students/${studentId}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setStudentData(data.data)
+      } else {
+        setError(data.error)
+      }
+    } catch (err) {
+      setError("Failed to fetch student data")
     }
-
-    // Mock API call - in real app, this would save to database
-    console.log("Feedback submitted:", { issue: selectedIssue, details: feedbackText })
-    alert(
-      "आपकी समस्या दर्ज की गई है। आपके मेंटर को सूचना भेज दी गई है। / Your issue has been recorded. Your mentor has been notified.",
-    )
-    setFeedbackText("")
-    setSelectedIssue("")
   }
 
-  const getRiskBadge = (level: string) => {
+  const fetchAnalytics = async () => {
+    try {
+      const response = await fetch("/api/analytics?type=overview")
+      const data = await response.json()
+      
+      if (data.success) {
+        setAnalyticsData(data.data)
+      }
+    } catch (err) {
+      console.error("Failed to fetch analytics:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const assessRisk = async () => {
+    setAssessingRisk(true)
+    try {
+      const response = await fetch("/api/ml", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId: studentId,
+          action: "assess-risk"
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        setRiskAssessment(data.data)
+        // Refresh student data to get updated risk score
+        fetchStudentData()
+      } else {
+        setError(data.error)
+      }
+    } catch (err) {
+      setError("Failed to assess risk")
+    } finally {
+      setAssessingRisk(false)
+    }
+  }
+
+  const sendNotification = async (type: string) => {
+    try {
+      const response = await fetch("/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId: studentId,
+          type: type,
+          recipientEmail: "mentor@school.edu"
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        alert(`${type} notification sent successfully!`)
+      } else {
+        alert(`Failed to send notification: ${data.error}`)
+      }
+    } catch (err) {
+      alert("Failed to send notification")
+    }
+  }
+
+  const getRiskColor = (level: string) => {
     switch (level) {
-      case "low":
-        return <Badge className="bg-green-100 text-green-800 border-green-200">कम जोखिम / Low Risk</Badge>
-      case "medium":
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">मध्यम जोखिम / Medium Risk</Badge>
-      case "high":
-        return <Badge className="bg-red-100 text-red-800 border-red-200">उच्च जोखिम / High Risk</Badge>
-      default:
-        return null
+      case "Critical": return "destructive"
+      case "High": return "destructive"
+      case "Medium": return "secondary"
+      case "Low": return "default"
+      default: return "default"
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-lg">Loading your dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center text-red-600">
+              <AlertTriangle className="w-12 h-12 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Error Loading Dashboard</h3>
+              <p className="text-sm">{error}</p>
+              <Button onClick={() => window.location.reload()} className="mt-4">
+                Try Again
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                <User className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold text-balance">स्वागत है / Welcome, {studentData.name}</h1>
-                <p className="text-sm text-muted-foreground">
-                  {studentData.class} • {studentData.school}
-                </p>
-              </div>
-            </div>
-            <Button variant="outline" onClick={onLogout} className="flex items-center gap-2 bg-transparent">
-              <LogOut className="w-4 h-4" />
-              लॉग आउट / Logout
-            </Button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Welcome, {studentData?.StudentName || "Student"}!
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Student ID: {studentData?.StudentID} | Dashboard
+            </p>
           </div>
+          <Button onClick={onLogout} variant="outline">
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
         </div>
-      </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Risk Assessment Alert */}
+        {studentData && studentData.RiskLevel !== "Low" && (
+          <Card className="mb-6 border-orange-200 bg-orange-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-6 h-6 text-orange-600" />
+                <div>
+                  <h3 className="font-semibold text-orange-800">
+                    Risk Assessment Alert
+                  </h3>
+                  <p className="text-sm text-orange-700">
+                    Your current risk level is <strong>{studentData.RiskLevel}</strong> with a {studentData.DropoutProbability}% dropout probability.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              अवलोकन / Overview
-            </TabsTrigger>
-            <TabsTrigger value="performance" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              प्रदर्शन / Performance
-            </TabsTrigger>
-            <TabsTrigger value="mentor" className="flex items-center gap-2">
-              <MessageCircle className="w-4 h-4" />
-              मेंटर / Mentor
-            </TabsTrigger>
-            <TabsTrigger value="support" className="flex items-center gap-2">
-              <Heart className="w-4 h-4" />
-              सहायता / Support
-            </TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="academic">Academic</TabsTrigger>
+            <TabsTrigger value="risk">Risk Analysis</TabsTrigger>
+            <TabsTrigger value="actions">Actions</TabsTrigger>
           </TabsList>
 
+          {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            {/* AI Summary Card */}
-            <Card className="border-l-4 border-l-primary">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="w-5 h-5 text-primary" />
-                  आपके बारे में AI विश्लेषण / AI Analysis About You
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-base leading-relaxed mb-4">{studentData.aiSummary}</p>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">ड्रॉपआउट जोखिम स्तर / Dropout Risk Level:</span>
-                  {getRiskBadge(studentData.riskLevel)}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Risk Level Card */}
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-primary" />
-                    उपस्थिति / Attendance
-                  </CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Risk Level</CardTitle>
+                  <Target className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-2xl font-bold">{studentData.attendance}%</span>
-                      <Badge variant={studentData.attendance >= 80 ? "default" : "destructive"}>
-                        {studentData.attendance >= 80 ? "अच्छा / Good" : "सुधार चाहिए / Needs Improvement"}
-                      </Badge>
-                    </div>
-                    <Progress value={studentData.attendance} className="h-2" />
+                  <div className="text-2xl font-bold">
+                    <Badge variant={getRiskColor(studentData?.RiskLevel || "Low")}>
+                      {studentData?.RiskLevel || "Low"}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Risk Score: {studentData?.RiskScore || 0}/100
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Attendance Card */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Attendance</CardTitle>
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {parseFloat(studentData?.AvgAttendance_LatestTerm || 0).toFixed(1)}%
+                  </div>
+                  <Progress 
+                    value={studentData?.AvgAttendance_LatestTerm || 0} 
+                    className="mt-2"
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Performance Card */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Performance</CardTitle>
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {parseFloat(studentData?.AvgMarks_LatestTerm || 0).toFixed(1)}%
+                  </div>
+                  <Progress 
+                    value={studentData?.AvgMarks_LatestTerm || 0} 
+                    className="mt-2"
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Dropout Probability Card */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Dropout Risk</CardTitle>
+                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {parseFloat(studentData?.DropoutProbability || 0).toFixed(1)}%
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Probability of dropping out
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Personal Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Student ID:</span>
+                    <span className="font-medium">{studentData?.StudentID}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Gender:</span>
+                    <span className="font-medium">{studentData?.Gender}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Age:</span>
+                    <span className="font-medium">{studentData?.Age}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Status:</span>
+                    <Badge variant={studentData?.IsDropout ? "destructive" : "default"}>
+                      {studentData?.IsDropout ? "Dropped Out" : "Active"}
+                    </Badge>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-primary" />
-                    समग्र प्रदर्शन / Overall Performance
+                <CardHeader>
+                  <CardTitle>School Statistics</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Total Students:</span>
+                    <span className="font-medium">{analyticsData?.statistics.totalStudents}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Avg Attendance:</span>
+                    <span className="font-medium">{parseFloat(analyticsData?.statistics.avgAttendance || 0).toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Avg Performance:</span>
+                    <span className="font-medium">{parseFloat(analyticsData?.statistics.avgPerformance || 0).toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Dropout Students:</span>
+                    <span className="font-medium">{analyticsData?.statistics.dropoutStudents}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Academic Tab */}
+          <TabsContent value="academic" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    Academic Performance
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-2xl font-bold">{studentData.performance}%</span>
-                      <Badge variant={studentData.performance >= 75 ? "default" : "secondary"}>
-                        {studentData.performance >= 75 ? "अच्छा / Good" : "औसत / Average"}
-                      </Badge>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <span>Latest Term Marks</span>
+                      <span className="font-semibold">{parseFloat(studentData?.AvgMarks_LatestTerm || 0).toFixed(1)}%</span>
                     </div>
-                    <Progress value={studentData.performance} className="h-2" />
+                    <Progress value={studentData?.AvgMarks_LatestTerm || 0} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <span>Attendance Rate</span>
+                      <span className="font-semibold">{parseFloat(studentData?.AvgAttendance_LatestTerm || 0).toFixed(1)}%</span>
+                    </div>
+                    <Progress value={studentData?.AvgAttendance_LatestTerm || 0} />
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-primary" />
-                    इस महीने के लक्ष्य / This Month's Goals
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Performance Trends
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="w-3 h-3" />
-                      85% उपस्थिति / 85% Attendance
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Performance Trend:</span>
+                      <span className="text-sm font-medium">
+                        {studentData && studentData.AvgMarks_LatestTerm > 60 ? "Good" : "Needs Improvement"}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <BookOpen className="w-3 h-3" />
-                      अंग्रेजी में सुधार / Improve English
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Target className="w-3 h-3" />
-                      सभी असाइनमेंट पूरे करें / Complete all assignments
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Attendance Status:</span>
+                      <span className="text-sm font-medium">
+                        {studentData && studentData.AvgAttendance_LatestTerm > 80 ? "Excellent" : 
+                         studentData && studentData.AvgAttendance_LatestTerm > 70 ? "Good" : "Needs Attention"}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
 
-            {/* Proposed Solutions */}
+          {/* Risk Analysis Tab */}
+          <TabsContent value="risk" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-secondary" />
-                  आपके लिए सुझाव / Suggestions for You
+                  <Brain className="w-5 h-5" />
+                  AI Risk Assessment
                 </CardTitle>
                 <CardDescription>
-                  आपके प्रदर्शन के आधार पर ये सुझाव दिए गए हैं / These suggestions are based on your performance
+                  Get an updated risk assessment using our machine learning model
                 </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {studentData.proposedSolutions.map((solution, index) => (
-                    <div key={index} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-xs font-bold text-primary-foreground">{index + 1}</span>
-                      </div>
-                      <p className="text-sm leading-relaxed">{solution}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="performance" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>हाल के ग्रेड / Recent Grades</CardTitle>
-                <CardDescription>आपके हाल के विषयवार अंक / Your recent subject-wise scores</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {studentData.recentGrades.map((grade, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <BookOpen className="w-5 h-5 text-primary" />
-                        <div>
-                          <p className="font-medium">{grade.subject}</p>
-                          <p className="text-sm text-muted-foreground">Grade: {grade.grade}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold">{grade.score}%</p>
-                        <Progress value={grade.score} className="w-20 h-2 mt-1" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="mentor" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="w-5 h-5 text-primary" />
-                  आपके मेंटर / Your Mentor
-                </CardTitle>
-                <CardDescription>
-                  आपकी सहायता के लिए नियुक्त मेंटर से संपर्क करें / Contact your assigned mentor for assistance
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
-                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-                      <User className="w-6 h-6 text-primary-foreground" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{studentData.mentor.name}</h3>
-                      <p className="text-sm text-muted-foreground">शिक्षा सलाहकार / Education Counselor</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button className="flex items-center gap-2 h-12" size="lg">
-                      <Phone className="w-4 h-4" />
-                      फोन करें / Call: {studentData.mentor.phone}
-                    </Button>
-                    <Button variant="outline" className="flex items-center gap-2 h-12 bg-transparent" size="lg">
-                      <Mail className="w-4 h-4" />
-                      ईमेल भेजें / Email: {studentData.mentor.email}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="support" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="w-5 h-5 text-primary" />
-                  समस्या रिपोर्ट करें / Report an Issue
-                </CardTitle>
-                <CardDescription>कोई भी कठिनाई हो तो यहाँ बताएं / Share any difficulties you're facing</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>समस्या का प्रकार / Issue Type</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {[
-                      "पढ़ाई में कठिनाई / Study Difficulty",
-                      "पारिवारिक दबाव / Family Pressure",
-                      "आर्थिक समस्या / Financial Issue",
-                      "अन्य / Other",
-                    ].map((issue) => (
-                      <Button
-                        key={issue}
-                        variant={selectedIssue === issue ? "default" : "outline"}
-                        onClick={() => setSelectedIssue(issue)}
-                        className="text-xs h-auto py-2 px-3 text-left"
-                      >
-                        {issue}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="feedback">विस्तार से बताएं / Provide Details</Label>
-                  <Textarea
-                    id="feedback"
-                    placeholder="अपनी समस्या के बारे में विस्तार से बताएं... / Describe your issue in detail..."
-                    value={feedbackText}
-                    onChange={(e) => setFeedbackText(e.target.value)}
-                    className="min-h-[120px] text-base"
-                  />
-                </div>
-
-                <Button onClick={handleFeedbackSubmit} className="w-full flex items-center gap-2" size="lg">
-                  <Send className="w-4 h-4" />
-                  समस्या भेजें / Submit Issue
+                <Button 
+                  onClick={assessRisk} 
+                  disabled={assessingRisk}
+                  className="w-full"
+                >
+                  {assessingRisk ? "Assessing Risk..." : "Run Risk Assessment"}
                 </Button>
 
-                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="font-semibold text-blue-900 mb-2">तत्काल सहायता / Immediate Help</h4>
-                  <p className="text-sm text-blue-800 mb-3">
-                    यदि आपको तुरंत सहायता चाहिए तो इन नंबरों पर संपर्क करें / If you need immediate help, contact these numbers:
-                  </p>
-                  <div className="space-y-1 text-sm">
-                    <p>
-                      <strong>हेल्पलाइन / Helpline:</strong> 1800-XXX-XXXX
-                    </p>
-                    <p>
-                      <strong>आपातकाल / Emergency:</strong> {studentData.mentor.phone}
-                    </p>
+                {riskAssessment && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {riskAssessment.riskScore}
+                        </div>
+                        <div className="text-sm text-blue-800">Risk Score</div>
+                      </div>
+                      <div className="text-center p-4 bg-orange-50 rounded-lg">
+                        <div className="text-2xl font-bold text-orange-600">
+                          {riskAssessment.riskLevel}
+                        </div>
+                        <div className="text-sm text-orange-800">Risk Level</div>
+                      </div>
+                      <div className="text-center p-4 bg-red-50 rounded-lg">
+                        <div className="text-2xl font-bold text-red-600">
+                          {parseFloat(riskAssessment.dropoutProbability || 0).toFixed(1)}%
+                        </div>
+                        <div className="text-sm text-red-800">Dropout Probability</div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-semibold mb-2">Risk Factors Identified:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {riskAssessment.factors.map((factor: string, index: number) => (
+                          <Badge key={index} variant="secondary">{factor}</Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-semibold mb-2">Recommendations:</h4>
+                      <ul className="space-y-1">
+                        {riskAssessment.recommendations.map((rec: string, index: number) => (
+                          <li key={index} className="text-sm flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                            {rec}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Actions Tab */}
+          <TabsContent value="actions" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="w-5 h-5" />
+                  Send Notifications
+                </CardTitle>
+                <CardDescription>
+                  Send alerts and reports to mentors and administrators
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button 
+                    onClick={() => sendNotification("risk-alert")}
+                    variant="destructive"
+                    className="h-auto p-4 flex flex-col items-center gap-2"
+                  >
+                    <AlertTriangle className="w-6 h-6" />
+                    <div className="text-center">
+                      <div className="font-semibold">Risk Alert</div>
+                      <div className="text-xs opacity-80">Send high-risk notification</div>
+                    </div>
+                  </Button>
+
+                  <Button 
+                    onClick={() => sendNotification("attendance-alert")}
+                    variant="secondary"
+                    className="h-auto p-4 flex flex-col items-center gap-2"
+                  >
+                    <Clock className="w-6 h-6" />
+                    <div className="text-center">
+                      <div className="font-semibold">Attendance Alert</div>
+                      <div className="text-xs opacity-80">Notify about attendance issues</div>
+                    </div>
+                  </Button>
+
+                  <Button 
+                    onClick={() => sendNotification("performance-alert")}
+                    variant="secondary"
+                    className="h-auto p-4 flex flex-col items-center gap-2"
+                  >
+                    <TrendingDown className="w-6 h-6" />
+                    <div className="text-center">
+                      <div className="font-semibold">Performance Alert</div>
+                      <div className="text-xs opacity-80">Report academic concerns</div>
+                    </div>
+                  </Button>
+
+                  <Button 
+                    onClick={() => sendNotification("monthly-report")}
+                    variant="outline"
+                    className="h-auto p-4 flex flex-col items-center gap-2"
+                  >
+                    <BarChart3 className="w-6 h-6" />
+                    <div className="text-center">
+                      <div className="font-semibold">Monthly Report</div>
+                      <div className="text-xs opacity-80">Send progress summary</div>
+                    </div>
+                  </Button>
                 </div>
               </CardContent>
             </Card>

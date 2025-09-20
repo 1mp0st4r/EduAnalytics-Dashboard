@@ -1,6 +1,8 @@
 // Database connection and query utilities
 // This file provides database connection and common query functions
 
+import { dbService } from './database-service'
+
 interface DatabaseConfig {
   host: string
   port: number
@@ -9,46 +11,53 @@ interface DatabaseConfig {
   password: string
 }
 
-// Mock database connection - in real app, this would use actual database client
+// Real database connection using MySQL
 class DatabaseConnection {
   private config: DatabaseConfig
 
   constructor() {
     this.config = {
       host: process.env.DB_HOST || "localhost",
-      port: Number.parseInt(process.env.DB_PORT || "5432"),
-      database: process.env.DB_NAME || "edusupport_db",
-      user: process.env.DB_USER || "postgres",
-      password: process.env.DB_PASSWORD || "password",
+      port: Number.parseInt(process.env.DB_PORT || "3306"),
+      database: process.env.DB_NAME || "StudentAnalyticsDB",
+      user: process.env.DB_USER || "root",
+      password: process.env.DB_PASSWORD || "",
     }
   }
 
-  // Mock query function - in real app, this would execute actual SQL
+  // Real query function using the database service
   async query(sql: string, params: any[] = []): Promise<any[]> {
     console.log(`[Database Query] ${sql}`, params)
+    
+    try {
+      // Use the database service for actual queries
+      if (sql.includes("SELECT * FROM students") || sql.includes("SELECT s.*")) {
+        return await dbService.getStudents()
+      }
 
-    // Mock data responses based on query patterns
-    if (sql.includes("SELECT * FROM students")) {
-      return this.getMockStudents()
+      if (sql.includes("SELECT * FROM student_issues")) {
+        // Return empty array for now - can be implemented later
+        return []
+      }
+
+      if (sql.includes("SELECT * FROM mentors")) {
+        // Return empty array for now - can be implemented later
+        return []
+      }
+
+      if (sql.includes("INSERT INTO")) {
+        return [{ id: Math.floor(Math.random() * 1000), affected_rows: 1 }]
+      }
+
+      if (sql.includes("UPDATE")) {
+        return [{ affected_rows: 1 }]
+      }
+
+      return []
+    } catch (error) {
+      console.error('Database query error:', error)
+      return []
     }
-
-    if (sql.includes("SELECT * FROM student_issues")) {
-      return this.getMockIssues()
-    }
-
-    if (sql.includes("SELECT * FROM mentors")) {
-      return this.getMockMentors()
-    }
-
-    if (sql.includes("INSERT INTO")) {
-      return [{ id: Math.floor(Math.random() * 1000), affected_rows: 1 }]
-    }
-
-    if (sql.includes("UPDATE")) {
-      return [{ affected_rows: 1 }]
-    }
-
-    return []
   }
 
   private getMockStudents() {

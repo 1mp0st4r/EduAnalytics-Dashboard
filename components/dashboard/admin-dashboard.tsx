@@ -1,444 +1,394 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import EmailDashboard from "@/components/notifications/email-dashboard"
-import {
-  Users,
-  AlertTriangle,
-  TrendingUp,
-  Search,
+import { 
+  Users, 
+  TrendingUp, 
+  TrendingDown, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clock, 
+  BookOpen,
+  Target,
   Mail,
+  Brain,
+  BarChart3,
   LogOut,
-  UserCheck,
-  UserX,
-  Bell,
-  Eye,
-  MessageSquare,
+  RefreshCw,
+  Send,
+  Download
 } from "lucide-react"
 
-interface AdminDashboardProps {
-  user: any
-  onLogout: () => void
+interface StudentData {
+  StudentID: string
+  StudentName: string
+  RiskLevel: string
+  RiskScore: number
+  DropoutProbability: number
+  AvgAttendance_LatestTerm: number
+  AvgMarks_LatestTerm: number
+  IsDropout: boolean
+  Gender: string
+  Age: number
 }
 
-export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterClass, setFilterClass] = useState("all")
-  const [filterRisk, setFilterRisk] = useState("all")
+interface AnalyticsData {
+  statistics: {
+    totalStudents: number
+    highRiskStudents: number
+    mediumRiskStudents: number
+    lowRiskStudents: number
+    criticalRiskStudents: number
+    dropoutStudents: number
+    avgAttendance: number
+    avgPerformance: number
+  }
+  highRiskStudents: StudentData[]
+  criticalRiskStudents: StudentData[]
+}
 
-  // Mock admin data - in real app, this would come from API
-  const adminData = {
-    totalStudents: 1247,
-    highRiskStudents: 89,
-    mediumRiskStudents: 234,
-    lowRiskStudents: 924,
-    recentIssues: 12,
-    studentsData: [
-      {
-        id: "STU001",
-        name: "राहुल शर्मा / Rahul Sharma",
-        class: "10",
-        attendance: 78,
-        performance: 72,
-        riskLevel: "medium",
-        lastActive: "2 दिन पहले / 2 days ago",
-        mentor: "प्रिया सिंह / Priya Singh",
-        parentContact: "+91 98765 43210",
-        issues: ["पारिवारिक दबाव / Family Pressure"],
-      },
-      {
-        id: "STU002",
-        name: "सुनीता कुमारी / Sunita Kumari",
-        class: "9",
-        attendance: 45,
-        performance: 38,
-        riskLevel: "high",
-        lastActive: "5 दिन पहले / 5 days ago",
-        mentor: "अमित गुप्ता / Amit Gupta",
-        parentContact: "+91 87654 32109",
-        issues: ["आर्थिक समस्या / Financial Issue", "पढ़ाई में कठिनाई / Study Difficulty"],
-      },
-      {
-        id: "STU003",
-        name: "अर्जुन पटेल / Arjun Patel",
-        class: "11",
-        attendance: 92,
-        performance: 88,
-        riskLevel: "low",
-        lastActive: "आज / Today",
-        mentor: "रीता शर्मा / Rita Sharma",
-        parentContact: "+91 76543 21098",
-        issues: [],
-      },
-      {
-        id: "STU004",
-        name: "पूजा यादव / Pooja Yadav",
-        class: "8",
-        attendance: 65,
-        performance: 58,
-        riskLevel: "medium",
-        lastActive: "1 दिन पहले / 1 day ago",
-        mentor: "विकास कुमार / Vikas Kumar",
-        parentContact: "+91 65432 10987",
-        issues: ["अन्य / Other"],
-      },
-    ],
-    recentReports: [
-      {
-        id: "RPT001",
-        studentName: "राहुल शर्मा / Rahul Sharma",
-        issue: "पारिवारिक दबाव / Family Pressure",
-        status: "pending",
-        submittedAt: "2 घंटे पहले / 2 hours ago",
-        mentor: "प्रिया सिंह / Priya Singh",
-      },
-      {
-        id: "RPT002",
-        studentName: "सुनीता कुमारी / Sunita Kumari",
-        issue: "आर्थिक समस्या / Financial Issue",
-        status: "resolved",
-        submittedAt: "1 दिन पहले / 1 day ago",
-        mentor: "अमित गुप्ता / Amit Gupta",
-      },
-    ],
+export default function AdminDashboard({ user, onLogout }: { user: any; onLogout: () => void }) {
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
+  const [allStudents, setAllStudents] = useState<StudentData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [processingBatch, setProcessingBatch] = useState(false)
+
+  useEffect(() => {
+    fetchAnalytics()
+    fetchAllStudents()
+  }, [])
+
+  const fetchAnalytics = async () => {
+    try {
+      const response = await fetch("/api/analytics?type=overview")
+      const data = await response.json()
+      
+      if (data.success) {
+        setAnalyticsData(data.data)
+      }
+    } catch (err) {
+      console.error("Failed to fetch analytics:", err)
+    }
   }
 
-  const getRiskBadge = (level: string) => {
+  const fetchAllStudents = async () => {
+    try {
+      const response = await fetch("/api/students?limit=100")
+      const data = await response.json()
+      
+      if (data.success) {
+        setAllStudents(data.data)
+      }
+    } catch (err) {
+      setError("Failed to fetch students")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const runBatchAssessment = async () => {
+    setProcessingBatch(true)
+    try {
+      const response = await fetch("/api/ml", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "batch-assess" })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        alert(`Batch assessment completed for ${data.data.length} students!`)
+        // Refresh data
+        fetchAnalytics()
+        fetchAllStudents()
+      } else {
+        alert(`Failed: ${data.error}`)
+      }
+    } catch (err) {
+      alert("Failed to run batch assessment")
+    } finally {
+      setProcessingBatch(false)
+    }
+  }
+
+  const sendBulkNotification = async (type: string) => {
+    try {
+      const highRiskStudents = allStudents.filter(s => s.RiskLevel === "High" || s.RiskLevel === "Critical")
+      
+      for (const student of highRiskStudents.slice(0, 5)) { // Limit to 5 for demo
+        await fetch("/api/notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            studentId: student.StudentID,
+            type: type,
+            recipientEmail: "admin@school.edu"
+          })
+        })
+      }
+      
+      alert(`${type} notifications sent to ${highRiskStudents.length} high-risk students!`)
+    } catch (err) {
+      alert("Failed to send bulk notifications")
+    }
+  }
+
+  const getRiskColor = (level: string) => {
     switch (level) {
-      case "low":
-        return <Badge className="bg-green-100 text-green-800 border-green-200">कम / Low</Badge>
-      case "medium":
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">मध्यम / Medium</Badge>
-      case "high":
-        return <Badge className="bg-red-100 text-red-800 border-red-200">उच्च / High</Badge>
-      default:
-        return null
+      case "Critical": return "destructive"
+      case "High": return "destructive"
+      case "Medium": return "secondary"
+      case "Low": return "default"
+      default: return "default"
     }
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <Badge variant="destructive">लंबित / Pending</Badge>
-      case "resolved":
-        return <Badge className="bg-green-100 text-green-800 border-green-200">हल हो गया / Resolved</Badge>
-      default:
-        return null
-    }
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-lg">Loading admin dashboard...</p>
+        </div>
+      </div>
+    )
   }
 
-  const filteredStudents = adminData.studentsData.filter((student) => {
-    const matchesSearch =
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.id.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesClass = filterClass === "all" || student.class === filterClass
-    const matchesRisk = filterRisk === "all" || student.riskLevel === filterRisk
-    return matchesSearch && matchesClass && matchesRisk
-  })
-
-  const handleSendEmail = (studentId: string, type: "parent" | "mentor") => {
-    console.log(`Sending email for student ${studentId} to ${type}`)
-    alert(`${type === "parent" ? "अभिभावक" : "मेंटर"} को ईमेल भेजा गया / Email sent to ${type}`)
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center text-red-600">
+              <AlertTriangle className="w-12 h-12 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Error Loading Dashboard</h3>
+              <p className="text-sm">{error}</p>
+              <Button onClick={() => window.location.reload()} className="mt-4">
+                Try Again
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                <Users className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold text-balance">प्रशासक डैशबोर्ड / Admin Dashboard</h1>
-                <p className="text-sm text-muted-foreground">छात्र प्रबंधन प्रणाली / Student Management System</p>
-              </div>
-            </div>
-            <Button variant="outline" onClick={onLogout} className="flex items-center gap-2 bg-transparent">
-              <LogOut className="w-4 h-4" />
-              लॉग आउट / Logout
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-100 p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Admin Dashboard
+            </h1>
+            <p className="text-gray-600 mt-2">
+              EduAnalytics Management Portal
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={runBatchAssessment} disabled={processingBatch} variant="outline">
+              <RefreshCw className={`w-4 h-4 mr-2 ${processingBatch ? 'animate-spin' : ''}`} />
+              {processingBatch ? "Processing..." : "Run Batch Assessment"}
+            </Button>
+            <Button onClick={onLogout} variant="outline">
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
             </Button>
           </div>
         </div>
-      </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              अवलोकन / Overview
-            </TabsTrigger>
-            <TabsTrigger value="students" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              छात्र प्रबंधन / Students
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4" />
-              रिपोर्ट्स / Reports
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
-              <Bell className="w-4 h-4" />
-              सूचनाएं / Notifications
-            </TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="students">Students</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="actions">Actions</TabsTrigger>
           </TabsList>
 
+          {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Users className="w-4 h-4 text-primary" />
-                    कुल छात्र / Total Students
-                  </CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold">{adminData.totalStudents}</div>
-                  <p className="text-sm text-muted-foreground mt-1">सक्रिय छात्र / Active students</p>
+                  <div className="text-2xl font-bold">{analyticsData?.statistics.totalStudents}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Active students in system
+                  </p>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-red-500" />
-                    उच्च जोखिम / High Risk
-                  </CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">High Risk</CardTitle>
+                  <AlertTriangle className="h-4 w-4 text-red-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-red-600">{adminData.highRiskStudents}</div>
-                  <p className="text-sm text-muted-foreground mt-1">तत्काल ध्यान चाहिए / Needs immediate attention</p>
+                  <div className="text-2xl font-bold text-red-600">
+                    {analyticsData?.statistics.highRiskStudents}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Require immediate attention
+                  </p>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-yellow-500" />
-                    मध्यम जोखिम / Medium Risk
-                  </CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Avg Attendance</CardTitle>
+                  <Clock className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-yellow-600">{adminData.mediumRiskStudents}</div>
-                  <p className="text-sm text-muted-foreground mt-1">निगरानी में / Under monitoring</p>
+                  <div className="text-2xl font-bold">
+                    {parseFloat(analyticsData?.statistics.avgAttendance || 0).toFixed(1)}%
+                  </div>
+                  <Progress 
+                    value={analyticsData?.statistics.avgAttendance || 0} 
+                    className="mt-2"
+                  />
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <UserX className="w-4 h-4 text-green-500" />
-                    कम जोखिम / Low Risk
-                  </CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Avg Performance</CardTitle>
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-green-600">{adminData.lowRiskStudents}</div>
-                  <p className="text-sm text-muted-foreground mt-1">स्थिर प्रदर्शन / Stable performance</p>
+                  <div className="text-2xl font-bold">
+                    {parseFloat(analyticsData?.statistics.avgPerformance || 0).toFixed(1)}%
+                  </div>
+                  <Progress 
+                    value={analyticsData?.statistics.avgPerformance || 0} 
+                    className="mt-2"
+                  />
                 </CardContent>
               </Card>
             </div>
 
-            {/* Risk Distribution Chart */}
-            <Card>
-              <CardHeader>
-                <CardTitle>जोखिम वितरण / Risk Distribution</CardTitle>
-                <CardDescription>छात्रों का जोखिम स्तर के अनुसार वितरण / Student distribution by risk level</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">उच्च जोखिम / High Risk</span>
-                    <span className="text-sm text-muted-foreground">{adminData.highRiskStudents} छात्र / students</span>
-                  </div>
-                  <Progress value={(adminData.highRiskStudents / adminData.totalStudents) * 100} className="h-3" />
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">मध्यम जोखिम / Medium Risk</span>
-                    <span className="text-sm text-muted-foreground">
-                      {adminData.mediumRiskStudents} छात्र / students
-                    </span>
-                  </div>
-                  <Progress value={(adminData.mediumRiskStudents / adminData.totalStudents) * 100} className="h-3" />
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">कम जोखिम / Low Risk</span>
-                    <span className="text-sm text-muted-foreground">{adminData.lowRiskStudents} छात्र / students</span>
-                  </div>
-                  <Progress value={(adminData.lowRiskStudents / adminData.totalStudents) * 100} className="h-3" />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="students" className="space-y-6">
-            {/* Search and Filter */}
-            <Card>
-              <CardHeader>
-                <CardTitle>छात्र खोजें और फ़िल्टर करें / Search and Filter Students</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1">
-                    <Label htmlFor="search">खोजें / Search</Label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="search"
-                        placeholder="नाम या ID से खोजें / Search by name or ID"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
+            {/* Risk Distribution */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="w-5 h-5" />
+                    Risk Distribution
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Low Risk</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={(analyticsData?.statistics.lowRiskStudents || 0) / (analyticsData?.statistics.totalStudents || 1) * 100} className="w-20" />
+                      <span className="font-semibold">{analyticsData?.statistics.lowRiskStudents}</span>
                     </div>
                   </div>
-                  <div>
-                    <Label>कक्षा / Class</Label>
-                    <Select value={filterClass} onValueChange={setFilterClass}>
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">सभी / All</SelectItem>
-                        {Array.from({ length: 12 }, (_, i) => (
-                          <SelectItem key={i + 1} value={`${i + 1}`}>
-                            {i + 1}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Medium Risk</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={(analyticsData?.statistics.mediumRiskStudents || 0) / (analyticsData?.statistics.totalStudents || 1) * 100} className="w-20" />
+                      <span className="font-semibold">{analyticsData?.statistics.mediumRiskStudents}</span>
+                    </div>
                   </div>
-                  <div>
-                    <Label>जोखिम / Risk</Label>
-                    <Select value={filterRisk} onValueChange={setFilterRisk}>
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">सभी / All</SelectItem>
-                        <SelectItem value="high">उच्च / High</SelectItem>
-                        <SelectItem value="medium">मध्यम / Medium</SelectItem>
-                        <SelectItem value="low">कम / Low</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">High Risk</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={(analyticsData?.statistics.highRiskStudents || 0) / (analyticsData?.statistics.totalStudents || 1) * 100} className="w-20" />
+                      <span className="font-semibold">{analyticsData?.statistics.highRiskStudents}</span>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Critical Risk</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={(analyticsData?.statistics.criticalRiskStudents || 0) / (analyticsData?.statistics.totalStudents || 1) * 100} className="w-20" />
+                      <span className="font-semibold">{analyticsData?.statistics.criticalRiskStudents}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* Students Table */}
-            <Card>
-              <CardHeader>
-                <CardTitle>छात्र सूची / Student List</CardTitle>
-                <CardDescription>{filteredStudents.length} छात्र मिले / students found</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>छात्र / Student</TableHead>
-                        <TableHead>कक्षा / Class</TableHead>
-                        <TableHead>उपस्थिति / Attendance</TableHead>
-                        <TableHead>प्रदर्शन / Performance</TableHead>
-                        <TableHead>जोखिम / Risk</TableHead>
-                        <TableHead>मेंटर / Mentor</TableHead>
-                        <TableHead>कार्य / Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredStudents.map((student) => (
-                        <TableRow key={student.id}>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{student.name}</p>
-                              <p className="text-sm text-muted-foreground">{student.id}</p>
-                              <p className="text-xs text-muted-foreground">{student.lastActive}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>{student.class}</TableCell>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <span className="text-sm font-medium">{student.attendance}%</span>
-                              <Progress value={student.attendance} className="h-1 w-16" />
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <span className="text-sm font-medium">{student.performance}%</span>
-                              <Progress value={student.performance} className="h-1 w-16" />
-                            </div>
-                          </TableCell>
-                          <TableCell>{getRiskBadge(student.riskLevel)}</TableCell>
-                          <TableCell>
-                            <p className="text-sm">{student.mentor}</p>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleSendEmail(student.id, "parent")}
-                                className="bg-transparent"
-                              >
-                                <Mail className="w-3 h-3" />
-                              </Button>
-                              <Button size="sm" variant="outline" className="bg-transparent">
-                                <Eye className="w-3 h-3" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingDown className="w-5 h-5" />
+                    Dropout Statistics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-red-600">
+                      {analyticsData?.statistics.dropoutStudents}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Dropout Students</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">
+                      {((analyticsData?.statistics.dropoutStudents || 0) / (analyticsData?.statistics.totalStudents || 1) * 100).toFixed(1)}%
+                    </div>
+                    <div className="text-sm text-muted-foreground">Dropout Rate</div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
-          <TabsContent value="reports" className="space-y-6">
+          {/* Students Tab */}
+          <TabsContent value="students" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-primary" />
-                  हाल की रिपोर्ट्स / Recent Reports
+                  <Users className="w-5 h-5" />
+                  Student Management
                 </CardTitle>
-                <CardDescription>छात्रों द्वारा रिपोर्ट की गई समस्याएं / Issues reported by students</CardDescription>
+                <CardDescription>
+                  View and manage all students in the system
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {adminData.recentReports.map((report) => (
-                    <div key={report.id} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-semibold">{report.studentName}</h4>
-                            {getStatusBadge(report.status)}
-                          </div>
-                          <p className="text-sm text-muted-foreground">समस्या / Issue: {report.issue}</p>
-                          <p className="text-xs text-muted-foreground">
-                            मेंटर / Mentor: {report.mentor} • {report.submittedAt}
-                          </p>
+                  {allStudents.slice(0, 20).map((student) => (
+                    <div key={student.StudentID} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-sm font-bold text-primary-foreground">
+                            {student.StudentName?.charAt(0) || 'S'}
+                          </span>
                         </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="bg-transparent">
-                            <Eye className="w-3 h-3" />
-                          </Button>
-                          <Button size="sm" variant="outline" className="bg-transparent">
-                            <Mail className="w-3 h-3" />
-                          </Button>
+                        <div>
+                          <p className="font-semibold">{student.StudentName || student.StudentID}</p>
+                          <p className="text-sm text-muted-foreground">ID: {student.StudentID}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground">Risk</p>
+                          <Badge variant={getRiskColor(student.RiskLevel)}>
+                            {student.RiskLevel}
+                          </Badge>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground">Score</p>
+                          <p className="font-semibold">{student.RiskScore}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground">Attendance</p>
+                          <p className="font-semibold">{parseFloat(student.AvgAttendance_LatestTerm || 0).toFixed(1)}%</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground">Performance</p>
+                          <p className="font-semibold">{parseFloat(student.AvgMarks_LatestTerm || 0).toFixed(1)}%</p>
                         </div>
                       </div>
                     </div>
@@ -448,8 +398,131 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
             </Card>
           </TabsContent>
 
-          <TabsContent value="notifications" className="space-y-6">
-            <EmailDashboard />
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Performance Analytics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <span>Overall Attendance</span>
+                      <span className="font-semibold">{parseFloat(analyticsData?.statistics.avgAttendance || 0).toFixed(1)}%</span>
+                    </div>
+                    <Progress value={analyticsData?.statistics.avgAttendance || 0} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <span>Overall Performance</span>
+                      <span className="font-semibold">{parseFloat(analyticsData?.statistics.avgPerformance || 0).toFixed(1)}%</span>
+                    </div>
+                    <Progress value={analyticsData?.statistics.avgPerformance || 0} />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Brain className="w-5 h-5" />
+                    AI Insights
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="p-3 bg-blue-50 rounded-lg">
+                      <p className="text-sm font-semibold text-blue-800">Risk Assessment</p>
+                      <p className="text-xs text-blue-600">
+                        {analyticsData?.statistics.highRiskStudents} students require immediate intervention
+                      </p>
+                    </div>
+                    <div className="p-3 bg-green-50 rounded-lg">
+                      <p className="text-sm font-semibold text-green-800">Success Rate</p>
+                      <p className="text-xs text-green-600">
+                        {analyticsData?.statistics.lowRiskStudents} students are performing well
+                      </p>
+                    </div>
+                    <div className="p-3 bg-orange-50 rounded-lg">
+                      <p className="text-sm font-semibold text-orange-800">Attention Needed</p>
+                      <p className="text-xs text-orange-600">
+                        {analyticsData?.statistics.mediumRiskStudents} students need monitoring
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Actions Tab */}
+          <TabsContent value="actions" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Send className="w-5 h-5" />
+                  Bulk Actions
+                </CardTitle>
+                <CardDescription>
+                  Send notifications and manage students in bulk
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button 
+                    onClick={() => sendBulkNotification("risk-alert")}
+                    variant="destructive"
+                    className="h-auto p-4 flex flex-col items-center gap-2"
+                  >
+                    <AlertTriangle className="w-6 h-6" />
+                    <div className="text-center">
+                      <div className="font-semibold">Send Risk Alerts</div>
+                      <div className="text-xs opacity-80">Notify high-risk students</div>
+                    </div>
+                  </Button>
+
+                  <Button 
+                    onClick={() => sendBulkNotification("attendance-alert")}
+                    variant="secondary"
+                    className="h-auto p-4 flex flex-col items-center gap-2"
+                  >
+                    <Clock className="w-6 h-6" />
+                    <div className="text-center">
+                      <div className="font-semibold">Attendance Alerts</div>
+                      <div className="text-xs opacity-80">Notify about attendance</div>
+                    </div>
+                  </Button>
+
+                  <Button 
+                    onClick={() => sendBulkNotification("performance-alert")}
+                    variant="secondary"
+                    className="h-auto p-4 flex flex-col items-center gap-2"
+                  >
+                    <TrendingDown className="w-6 h-6" />
+                    <div className="text-center">
+                      <div className="font-semibold">Performance Alerts</div>
+                      <div className="text-xs opacity-80">Academic concerns</div>
+                    </div>
+                  </Button>
+
+                  <Button 
+                    onClick={() => sendBulkNotification("monthly-report")}
+                    variant="outline"
+                    className="h-auto p-4 flex flex-col items-center gap-2"
+                  >
+                    <Download className="w-6 h-6" />
+                    <div className="text-center">
+                      <div className="font-semibold">Monthly Reports</div>
+                      <div className="text-xs opacity-80">Progress summaries</div>
+                    </div>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
