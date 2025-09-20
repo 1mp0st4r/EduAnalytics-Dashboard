@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { dbService } from "@/lib/database-service"
+import { neonService } from "@/lib/neon-service"
 
 // Get comprehensive analytics and statistics
 export async function GET(request: NextRequest) {
@@ -9,9 +9,9 @@ export async function GET(request: NextRequest) {
 
     switch (type) {
       case 'overview':
-        const stats = await dbService.getStudentStatistics()
-        const highRiskStudents = await dbService.getHighRiskStudents()
-        const criticalRiskStudents = await dbService.getCriticalRiskStudents()
+        const stats = await neonService.getStudentStatistics()
+        const highRiskStudents = await neonService.getStudents({ riskLevel: 'High' })
+        const criticalRiskStudents = await neonService.getStudents({ riskLevel: 'Critical' })
         
         return NextResponse.json({
           success: true,

@@ -1,35 +1,35 @@
 import { NextRequest, NextResponse } from "next/server"
-import { dbService } from "@/lib/database-service"
+import { neonService } from "@/lib/neon-service"
 
 export async function GET(request: NextRequest) {
   try {
     console.log("[API] Testing database connection...")
 
     // Test database connection
-    const isConnected = await dbService.testConnection()
+    const isConnected = await neonService.testConnection()
     
     if (!isConnected) {
       return NextResponse.json(
         { 
           success: false, 
           message: "Database connection failed",
-          error: "Unable to connect to MySQL database"
+          error: "Unable to connect to Neon PostgreSQL database"
         }, 
         { status: 500 }
       )
     }
 
     // Get basic statistics
-    const stats = await dbService.getStudentStatistics()
+    const stats = await neonService.getStudentStatistics()
     
     // Get a few sample students
-    const sampleStudents = await dbService.getStudents({ limit: 5 })
+    const sampleStudents = await neonService.getStudents({ limit: 5 })
 
     return NextResponse.json({
       success: true,
       message: "Database connection successful",
       data: {
-        connection: "Connected to MySQL database",
+        connection: "Connected to Neon PostgreSQL database",
         statistics: stats,
         sampleStudents: sampleStudents.map(student => ({
           StudentID: student.StudentID,

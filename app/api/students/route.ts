@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { dbService } from "@/lib/database-service"
+import { neonService } from "@/lib/neon-service"
 
 // Get all students with filtering and pagination
 export async function GET(request: NextRequest) {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : 0,
     }
 
-    const students = await dbService.getStudents(filters)
+    const students = await neonService.getStudents(filters)
     
     return NextResponse.json({
       success: true,

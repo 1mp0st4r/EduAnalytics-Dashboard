@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { dbService } from "@/lib/database-service"
+import { neonService } from "@/lib/neon-service"
 
 // Get specific student by ID
 export async function GET(
@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const student = await dbService.getStudentById(params.id)
+    const student = await neonService.getStudentById(params.id)
     
     if (!student) {
       return NextResponse.json(

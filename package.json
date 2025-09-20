@@ -28,7 +28,9 @@
     "db:init": "node scripts/setup-database.js",
     "db:setup": "node scripts/04-import-csv-data.js",
     "db:test": "node -e \"require('./lib/database-service').dbService.testConnection()\"",
-    "setup": "npm run db:init && npm run db:setup"
+    "setup": "npm run db:init && npm run db:setup",
+    "neon:setup": "node scripts/setup-neon.js",
+    "neon:test": "node -e \"require('./lib/neon-service').neonService.testConnection()\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -59,6 +61,7 @@
     "@radix-ui/react-toggle": "1.1.1",
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
+    "@types/pg": "^8.15.5",
     "@vercel/analytics": "latest",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
@@ -75,6 +78,7 @@
     "next": "14.2.16",
     "next-themes": "^0.4.4",
     "nodemailer": "latest",
+    "pg": "^8.16.3",
     "react": "^18",
     "react-day-picker": "9.8.0",
     "react-dom": "^18",
