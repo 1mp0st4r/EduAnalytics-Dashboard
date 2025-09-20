@@ -1,5 +1,5 @@
 // API helper functions for database operations
-import { dbService } from "./database"
+import { dbService } from "./database-service"
 
 export interface StudentFilters {
   riskLevel?: string
