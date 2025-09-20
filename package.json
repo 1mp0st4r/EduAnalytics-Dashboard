@@ -1,7 +1,25 @@
 {
-  "name": "my-v0-project",
-  "version": "0.1.0",
+  "name": "eduanalytics-dashboard",
+  "version": "1.0.0",
+  "description": "Advanced Educational Analytics and Dropout Prediction System for Institutions",
   "private": true,
+  "homepage": "https://eduanalytics-dashboard.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/1mp0st4r/EduAnalytics-Dashboard.git"
+  },
+  "keywords": [
+    "education",
+    "analytics",
+    "dropout-prediction",
+    "machine-learning",
+    "student-management",
+    "nextjs",
+    "typescript",
+    "mysql"
+  ],
+  "author": "EduAnalytics Team",
+  "license": "MIT",
   "scripts": {
     "build": "next build",
     "dev": "next dev",
