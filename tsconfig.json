@@ -21,8 +21,13 @@
     "paths": {
       "@/*": ["./*"],
       "@/components/*": ["./components/*"],
+      "@/components/ai/*": ["./components/ai/*"],
+      "@/components/auth/*": ["./components/auth/*"],
+      "@/components/dashboard/*": ["./components/dashboard/*"],
+      "@/components/ui/*": ["./components/ui/*"],
       "@/lib/*": ["./lib/*"],
-      "@/app/*": ["./app/*"]
+      "@/app/*": ["./app/*"],
+      "@/hooks/*": ["./hooks/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
