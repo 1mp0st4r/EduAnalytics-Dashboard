@@ -1,32 +1,42 @@
 import { Pool, PoolClient } from 'pg'
 
-// Neon PostgreSQL database service
+// Neon PostgreSQL database service - optimized for serverless
 export class NeonService {
-  private pool: Pool
+  private connectionString: string
 
   constructor() {
-    this.pool = new Pool({
-      connectionString: process.env.DATABASE_URL || process.env.NEON_URL,
-      ssl: {
-        rejectUnauthorized: false
-      },
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+    this.connectionString = process.env.DATABASE_URL || process.env.NEON_URL || ''
+  }
+
+  // Create a new connection for each operation (serverless-friendly)
+  private async getConnection() {
+    return new Pool({
+      connectionString: this.connectionString,
+      ssl: { rejectUnauthorized: false },
+      max: 1, // Single connection for serverless
+      idleTimeoutMillis: 0, // Don't keep connections alive
+      connectionTimeoutMillis: 10000, // 10 second timeout
     })
   }
 
   // Test database connection
   async testConnection(): Promise<boolean> {
+    const pool = await this.getConnection()
     try {
-      const client = await this.pool.connect()
-      await client.query('SELECT NOW()')
-      client.release()
+      console.log('🔍 Testing Neon connection...')
+      console.log('🔍 Connection string available:', !!this.connectionString)
+      
+      const result = await pool.query('SELECT NOW()')
+      console.log('🔍 Query result:', result.rows[0])
+      
       console.log('✅ Neon PostgreSQL connection successful')
       return true
     } catch (error) {
       console.error('❌ Neon PostgreSQL connection failed:', error)
+      console.error('❌ Error details:', error.message)
       return false
+    } finally {
+      await pool.end()
     }
   }
 
@@ -53,13 +63,14 @@ export class NeonService {
         s.gender as "Gender",
         s.phone as "ContactPhoneNumber",
         s.email as "ContactEmail",
-        m.full_name as "MentorName",
-        m.email as "MentorEmail",
-        m.phone as "MentorPhone",
+        u.full_name as "MentorName",
+        u.email as "MentorEmail",
+        u.phone as "MentorPhone",
         sc.name as "SchoolName",
         s.created_at
       FROM students s
       LEFT JOIN mentors m ON s.mentor_id = m.id
+      LEFT JOIN users u ON m.user_id = u.id
       LEFT JOIN schools sc ON s.school_id = sc.id
       WHERE s.is_active = true
     `
@@ -98,12 +109,15 @@ export class NeonService {
       params.push(filters.offset)
     }
 
+    const pool = await this.getConnection()
     try {
-      const result = await this.pool.query(sql, params)
+      const result = await pool.query(sql, params)
       return result.rows
     } catch (error) {
       console.error('Error fetching students:', error)
       throw error
+    } finally {
+      await pool.end()
     }
   }
 
@@ -124,23 +138,27 @@ export class NeonService {
         s.gender as "Gender",
         s.phone as "ContactPhoneNumber",
         s.email as "ContactEmail",
-        m.full_name as "MentorName",
-        m.email as "MentorEmail",
-        m.phone as "MentorPhone",
+        u.full_name as "MentorName",
+        u.email as "MentorEmail",
+        u.phone as "MentorPhone",
         sc.name as "SchoolName",
         s.created_at
       FROM students s
       LEFT JOIN mentors m ON s.mentor_id = m.id
+      LEFT JOIN users u ON m.user_id = u.id
       LEFT JOIN schools sc ON s.school_id = sc.id
       WHERE s.student_id = $1 AND s.is_active = true
     `
 
+    const pool = await this.getConnection()
     try {
-      const result = await this.pool.query(sql, [studentId])
+      const result = await pool.query(sql, [studentId])
       return result.rows.length > 0 ? result.rows[0] : null
     } catch (error) {
       console.error('Error fetching student by ID:', error)
       throw error
+    } finally {
+      await pool.end()
     }
   }
 
@@ -157,12 +175,15 @@ export class NeonService {
       WHERE student_id = $4
     `
 
+    const pool = await this.getConnection()
     try {
-      const result = await this.pool.query(sql, [riskLevel, riskScore, dropoutProbability, studentId])
+      const result = await pool.query(sql, [riskLevel, riskScore, dropoutProbability, studentId])
       return result.rowCount > 0
     } catch (error) {
       console.error('Error updating student risk:', error)
       throw error
+    } finally {
+      await pool.end()
     }
   }
 
@@ -191,8 +212,9 @@ export class NeonService {
       WHERE is_active = true
     `
 
+    const pool = await this.getConnection()
     try {
-      const result = await this.pool.query(sql)
+      const result = await pool.query(sql)
       const row = result.rows[0]
       return {
         totalStudents: parseInt(row.totalStudents) || 0,
@@ -207,6 +229,8 @@ export class NeonService {
     } catch (error) {
       console.error('Error fetching student statistics:', error)
       throw error
+    } finally {
+      await pool.end()
     }
   }
 
@@ -224,8 +248,9 @@ export class NeonService {
       VALUES ($1, $2, $3, $4, $5, $6, CURRENT_DATE)
     `
 
+    const pool = await this.getConnection()
     try {
-      const result = await this.pool.query(sql, [
+      const result = await pool.query(sql, [
         studentId,
         predictionType,
         predictionValue,
@@ -237,6 +262,8 @@ export class NeonService {
     } catch (error) {
       console.error('Error creating AI prediction:', error)
       throw error
+    } finally {
+      await pool.end()
     }
   }
 
@@ -248,18 +275,21 @@ export class NeonService {
       ORDER BY created_at DESC
     `
 
+    const pool = await this.getConnection()
     try {
-      const result = await this.pool.query(sql, [studentId])
+      const result = await pool.query(sql, [studentId])
       return result.rows
     } catch (error) {
       console.error('Error fetching AI predictions:', error)
       throw error
+    } finally {
+      await pool.end()
     }
   }
 
-  // Close database connection
+  // Close database connection (no-op for serverless)
   async close(): Promise<void> {
-    await this.pool.end()
+    // No persistent connections to close in serverless mode
   }
 }
 

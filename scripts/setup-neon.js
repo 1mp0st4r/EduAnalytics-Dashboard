@@ -7,6 +7,77 @@ const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 
+// Function to parse SQL statements properly, handling complex statements with subqueries
+function parseSQLStatements(sql) {
+    const statements = [];
+    let currentStatement = '';
+    let inString = false;
+    let stringChar = '';
+    let parenDepth = 0;
+    let inComment = false;
+    
+    for (let i = 0; i < sql.length; i++) {
+        const char = sql[i];
+        const nextChar = sql[i + 1];
+        
+        // Handle comments
+        if (!inString && !inComment && char === '-' && nextChar === '-') {
+            inComment = true;
+            // Skip the rest of the line
+            while (i < sql.length && sql[i] !== '\n') {
+                i++;
+            }
+            inComment = false;
+            continue;
+        }
+        
+        // Handle string literals
+        if (!inString && !inComment && (char === "'" || char === '"')) {
+            inString = true;
+            stringChar = char;
+            currentStatement += char;
+        } else if (inString && char === stringChar) {
+            // Check for escaped quotes
+            if (nextChar === stringChar) {
+                currentStatement += char + nextChar;
+                i++; // Skip next character
+            } else {
+                inString = false;
+                stringChar = '';
+                currentStatement += char;
+            }
+        } else if (!inString && !inComment) {
+            // Track parentheses depth
+            if (char === '(') {
+                parenDepth++;
+            } else if (char === ')') {
+                parenDepth--;
+            }
+            
+            // Only split on semicolon if we're not inside parentheses or strings
+            if (char === ';' && parenDepth === 0) {
+                const trimmed = currentStatement.trim();
+                if (trimmed && trimmed.length > 0) {
+                    statements.push(trimmed);
+                }
+                currentStatement = '';
+            } else {
+                currentStatement += char;
+            }
+        } else if (!inComment) {
+            currentStatement += char;
+        }
+    }
+    
+    // Add the last statement if it doesn't end with semicolon
+    const trimmed = currentStatement.trim();
+    if (trimmed && trimmed.length > 0) {
+        statements.push(trimmed);
+    }
+    
+    return statements;
+}
+
 // Database configuration for Neon
 const dbConfig = {
     connectionString: process.env.DATABASE_URL || process.env.NEON_URL,
@@ -35,22 +106,23 @@ async function setupNeon() {
         const schemaPath = path.join(__dirname, '06-create-cockroachdb-schema.sql');
         const schemaSQL = fs.readFileSync(schemaPath, 'utf8');
         
-        // Split the SQL into individual statements
-        const statements = schemaSQL
-            .split(';')
-            .map(stmt => stmt.trim())
-            .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+        // Better SQL statement parsing - handle complex statements with subqueries
+        const statements = parseSQLStatements(schemaSQL);
+        console.log(`📝 Parsed ${statements.length} SQL statements`);
 
-        for (const statement of statements) {
+        for (let i = 0; i < statements.length; i++) {
+            const statement = statements[i];
             if (statement.trim()) {
                 try {
+                    console.log(`   [${i + 1}/${statements.length}] Executing: ${statement.substring(0, 50)}...`);
                     await pool.query(statement);
                 } catch (error) {
                     // Ignore errors for statements that might already exist
                     if (!error.message.includes('already exists') && 
                         !error.message.includes('duplicate key') &&
-                        !error.message.includes('ON CONFLICT')) {
-                        console.warn(`⚠️  Warning executing statement: ${error.message}`);
+                        !error.message.includes('ON CONFLICT') &&
+                        !error.message.includes('does not exist')) {
+                        console.warn(`⚠️  Warning executing statement [${i + 1}]: ${error.message}`);
                     }
                 }
             }
@@ -72,15 +144,28 @@ async function setupNeon() {
             console.log(`   - ${row.table_name}`);
         });
 
-        // Step 4: Check sample data
+        // Step 4: Check sample data (with error handling)
         console.log('👥 Checking sample data...');
-        const studentsResult = await pool.query('SELECT COUNT(*) as count FROM students');
-        const mentorsResult = await pool.query('SELECT COUNT(*) as count FROM mentors');
-        const schoolsResult = await pool.query('SELECT COUNT(*) as count FROM schools');
+        try {
+            const studentsResult = await pool.query('SELECT COUNT(*) as count FROM students');
+            console.log(`   - Students: ${studentsResult.rows[0].count}`);
+        } catch (error) {
+            console.log(`   - Students: Table not found or empty`);
+        }
         
-        console.log(`   - Students: ${studentsResult.rows[0].count}`);
-        console.log(`   - Mentors: ${mentorsResult.rows[0].count}`);
-        console.log(`   - Schools: ${schoolsResult.rows[0].count}`);
+        try {
+            const mentorsResult = await pool.query('SELECT COUNT(*) as count FROM mentors');
+            console.log(`   - Mentors: ${mentorsResult.rows[0].count}`);
+        } catch (error) {
+            console.log(`   - Mentors: Table not found or empty`);
+        }
+        
+        try {
+            const schoolsResult = await pool.query('SELECT COUNT(*) as count FROM schools');
+            console.log(`   - Schools: ${schoolsResult.rows[0].count}`);
+        } catch (error) {
+            console.log(`   - Schools: Table not found or empty`);
+        }
 
         console.log('\n🎉 Neon PostgreSQL setup completed successfully!');
         console.log('🚀 Your EduAnalytics Dashboard is ready to use with Neon!');

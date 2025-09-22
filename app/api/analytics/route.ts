@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { neonService } from "@/lib/neon-service"
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic'
+
 // Get comprehensive analytics and statistics
 export async function GET(request: NextRequest) {
   try {

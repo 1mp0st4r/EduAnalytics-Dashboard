@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
-  Users, 
+import {
+  Users,
   TrendingUp, 
   TrendingDown, 
-  AlertTriangle, 
+  AlertTriangle,
   CheckCircle, 
   Clock, 
   BookOpen,
@@ -183,16 +183,16 @@ export default function AdminDashboard({ user, onLogout }: { user: any; onLogout
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-100 p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+      {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <div>
+              <div>
             <h1 className="text-3xl font-bold text-gray-900">
               Admin Dashboard
             </h1>
             <p className="text-gray-600 mt-2">
               EduAnalytics Management Portal
             </p>
-          </div>
+              </div>
           <div className="flex gap-2">
             <Button onClick={runBatchAssessment} disabled={processingBatch} variant="outline">
               <RefreshCw className={`w-4 h-4 mr-2 ${processingBatch ? 'animate-spin' : ''}`} />
@@ -280,13 +280,13 @@ export default function AdminDashboard({ user, onLogout }: { user: any; onLogout
 
             {/* Risk Distribution */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
+            <Card>
+              <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Target className="w-5 h-5" />
                     Risk Distribution
                   </CardTitle>
-                </CardHeader>
+              </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Low Risk</span>
@@ -300,7 +300,7 @@ export default function AdminDashboard({ user, onLogout }: { user: any; onLogout
                     <div className="flex items-center gap-2">
                       <Progress value={(analyticsData?.statistics.mediumRiskStudents || 0) / (analyticsData?.statistics.totalStudents || 1) * 100} className="w-20" />
                       <span className="font-semibold">{analyticsData?.statistics.mediumRiskStudents}</span>
-                    </div>
+                  </div>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">High Risk</span>
@@ -314,33 +314,33 @@ export default function AdminDashboard({ user, onLogout }: { user: any; onLogout
                     <div className="flex items-center gap-2">
                       <Progress value={(analyticsData?.statistics.criticalRiskStudents || 0) / (analyticsData?.statistics.totalStudents || 1) * 100} className="w-20" />
                       <span className="font-semibold">{analyticsData?.statistics.criticalRiskStudents}</span>
-                    </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card>
-                <CardHeader>
+            <Card>
+              <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingDown className="w-5 h-5" />
                     Dropout Statistics
                   </CardTitle>
-                </CardHeader>
+              </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="text-center">
                     <div className="text-3xl font-bold text-red-600">
                       {analyticsData?.statistics.dropoutStudents}
-                    </div>
+                            </div>
                     <div className="text-sm text-muted-foreground">Dropout Students</div>
-                  </div>
+                            </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold">
                       {((analyticsData?.statistics.dropoutStudents || 0) / (analyticsData?.statistics.totalStudents || 1) * 100).toFixed(1)}%
-                    </div>
+                            </div>
                     <div className="text-sm text-muted-foreground">Dropout Rate</div>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+              </CardContent>
+            </Card>
             </div>
           </TabsContent>
 
@@ -381,7 +381,7 @@ export default function AdminDashboard({ user, onLogout }: { user: any; onLogout
                         <div className="text-center">
                           <p className="text-sm text-muted-foreground">Score</p>
                           <p className="font-semibold">{student.RiskScore}</p>
-                        </div>
+                          </div>
                         <div className="text-center">
                           <p className="text-sm text-muted-foreground">Attendance</p>
                           <p className="font-semibold">{parseFloat(student.AvgAttendance_LatestTerm || 0).toFixed(1)}%</p>
