@@ -79,17 +79,24 @@ export default function Home() {
 
   // Check for existing login state on component mount
   useEffect(() => {
+    console.log('🔍 Checking login state on mount...')
     const isLoggedIn = localStorage.getItem('isLoggedIn')
     const userType = localStorage.getItem('userType')
     
+    console.log('🔍 Login state:', { isLoggedIn, userType })
+    
     if (isLoggedIn === 'true' && userType) {
       if (userType === 'admin') {
+        console.log('✅ Setting admin dashboard state and fetching data...')
         setAuthState('admin-dashboard')
         fetchData()
       } else if (userType === 'student') {
+        console.log('🔄 Redirecting to student dashboard...')
         // Redirect to student dashboard
         window.location.href = '/student-dashboard'
       }
+    } else {
+      console.log('❌ Not logged in, showing login page')
     }
   }, [])
 
