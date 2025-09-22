@@ -85,12 +85,19 @@ export default function StudentDashboard() {
         setError('Failed to fetch student data')
       }
 
-      // Fetch overall statistics
-      const statsResponse = await fetch('/api/analytics')
-      const statsData = await statsResponse.json()
-      if (statsData.success) {
-        setStatistics(statsData.data.statistics)
+      // Calculate statistics for this student
+      const student = data.data[0]
+      const stats = {
+        totalStudents: 1,
+        highRiskStudents: student.RiskLevel === 'High' ? 1 : 0,
+        mediumRiskStudents: student.RiskLevel === 'Medium' ? 1 : 0,
+        lowRiskStudents: student.RiskLevel === 'Low' ? 1 : 0,
+        criticalRiskStudents: student.RiskLevel === 'Critical' ? 1 : 0,
+        dropoutStudents: student.IsDropout ? 1 : 0,
+        avgAttendance: parseFloat(student.AvgAttendance_LatestTerm),
+        avgPerformance: parseFloat(student.AvgMarks_LatestTerm)
       }
+      setStatistics(stats)
     } catch (err) {
       setError('Failed to fetch student data')
       console.error('Error fetching student data:', err)

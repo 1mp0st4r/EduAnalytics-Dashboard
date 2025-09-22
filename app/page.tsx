@@ -129,41 +129,30 @@ export default function Home() {
 
           <Card className="border-0 shadow-xl">
             <CardHeader className="text-center pb-4">
-              <CardTitle className="text-2xl">Admin Login</CardTitle>
+              <CardTitle className="text-2xl">Quick Access</CardTitle>
               <CardDescription>
-                Sign in to access the admin dashboard
+                Choose your account type to continue
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={(e) => {
-                e.preventDefault()
-                handleLogin("admin", { email: "admin@example.com", name: "Admin User" })
-              }} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="admin@example.com"
-                    defaultValue="admin@example.com"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter password"
-                    required
-                  />
-                </div>
-
-                <Button type="submit" className="w-full">
-                  Sign In as Admin
-                </Button>
-              </form>
+            <CardContent className="space-y-4">
+              <Button 
+                onClick={() => handleLogin("admin", { email: "admin@example.com", name: "Admin User" })}
+                className="w-full h-12 text-lg"
+                size="lg"
+              >
+                <Users className="w-5 h-5 mr-2" />
+                Admin Dashboard
+              </Button>
+              
+              <Button 
+                onClick={() => handleLogin("student", { email: "student@example.com", name: "Student User" })}
+                variant="outline"
+                className="w-full h-12 text-lg"
+                size="lg"
+              >
+                <GraduationCap className="w-5 h-5 mr-2" />
+                Student Dashboard
+              </Button>
               
               <div className="mt-4 text-center">
                 <Button variant="link" onClick={() => window.location.href = '/login'}>

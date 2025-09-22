@@ -48,8 +48,8 @@ export default function LoginPage() {
       await new Promise(resolve => setTimeout(resolve, 1000))
       
       // Simple validation
-      if (!loginData.email || !loginData.password) {
-        setError("Please fill in all fields")
+      if (!loginData.email) {
+        setError("Please enter your email")
         return
       }
       
@@ -168,17 +168,16 @@ export default function LoginPage() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
+                    <Label htmlFor="login-password">Password (Optional)</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                       <Input
                         id="login-password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Enter your password"
+                        placeholder="Enter your password (optional)"
                         value={loginData.password}
                         onChange={(e) => setLoginData({...loginData, password: e.target.value})}
                         className="pl-10 pr-10"
-                        required
                       />
                       <Button
                         type="button"
