@@ -266,13 +266,14 @@ export default function Home() {
                 </Alert>
               )}
 
-              {statistics && (
+              {/* Welcome Section */}
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome back, Admin!</h1>
+                <p className="text-slate-600">Here's what's happening with your students today.</p>
+              </div>
+
+              {statistics ? (
                 <>
-                  {/* Welcome Section */}
-                  <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome back, Admin!</h1>
-                    <p className="text-slate-600">Here's what's happening with your students today.</p>
-                  </div>
 
                   {/* Stats Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -542,6 +543,16 @@ export default function Home() {
                     </CardContent>
                   </Card>
                 </>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-slate-600 mb-4">
+                    {loading ? 'Loading dashboard data...' : 'No data available. Click refresh to try again.'}
+                  </div>
+                  <Button onClick={fetchData} disabled={loading}>
+                    <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                    {loading ? 'Loading...' : 'Refresh Data'}
+                  </Button>
+                </div>
               )}
             </main>
           </div>

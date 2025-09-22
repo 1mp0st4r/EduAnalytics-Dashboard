@@ -76,31 +76,37 @@ export default function StudentDashboard() {
     setLoading(true)
     setError(null)
     try {
+      console.log('🔄 Fetching student data...')
       // For demo purposes, we'll use the first student as the logged-in student
       const response = await fetch('/api/students?limit=1')
       const data = await response.json()
+      console.log('📊 Student data response:', data)
+      
       if (data.success && data.data.length > 0) {
-        setStudentData(data.data[0])
+        const student = data.data[0]
+        console.log('✅ Student data loaded:', student.StudentName)
+        setStudentData(student)
+
+        // Calculate statistics for this student
+        const stats = {
+          totalStudents: 1,
+          highRiskStudents: student.RiskLevel === 'High' ? 1 : 0,
+          mediumRiskStudents: student.RiskLevel === 'Medium' ? 1 : 0,
+          lowRiskStudents: student.RiskLevel === 'Low' ? 1 : 0,
+          criticalRiskStudents: student.RiskLevel === 'Critical' ? 1 : 0,
+          dropoutStudents: student.IsDropout ? 1 : 0,
+          avgAttendance: parseFloat(student.AvgAttendance_LatestTerm),
+          avgPerformance: parseFloat(student.AvgMarks_LatestTerm)
+        }
+        setStatistics(stats)
+        console.log('✅ Statistics calculated:', stats)
       } else {
+        console.error('❌ No student data available:', data)
         setError('Failed to fetch student data')
       }
-
-      // Calculate statistics for this student
-      const student = data.data[0]
-      const stats = {
-        totalStudents: 1,
-        highRiskStudents: student.RiskLevel === 'High' ? 1 : 0,
-        mediumRiskStudents: student.RiskLevel === 'Medium' ? 1 : 0,
-        lowRiskStudents: student.RiskLevel === 'Low' ? 1 : 0,
-        criticalRiskStudents: student.RiskLevel === 'Critical' ? 1 : 0,
-        dropoutStudents: student.IsDropout ? 1 : 0,
-        avgAttendance: parseFloat(student.AvgAttendance_LatestTerm),
-        avgPerformance: parseFloat(student.AvgMarks_LatestTerm)
-      }
-      setStatistics(stats)
     } catch (err) {
+      console.error('❌ Error fetching student data:', err)
       setError('Failed to fetch student data')
-      console.error('Error fetching student data:', err)
     } finally {
       setLoading(false)
     }
