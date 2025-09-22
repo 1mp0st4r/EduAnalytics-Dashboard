@@ -7,7 +7,7 @@ This README provides an overview of the project, including team details, relevan
 
 **Team Name:** EduAnalytics Team
 
-**Team Leader:** @1mp0st4r
+**Team Leader:** @ParthKay
 
 **Team Members:**
 
