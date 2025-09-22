@@ -32,8 +32,12 @@ import {
   GraduationCap,
   BarChart3,
   UserCheck,
-  UserX
+  UserX,
+  X
 } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 interface Student {
   id: string
@@ -63,6 +67,17 @@ export default function StudentsPage() {
   const [filterClass, setFilterClass] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [studentsPerPage] = useState(20)
+  const [isAddStudentOpen, setIsAddStudentOpen] = useState(false)
+  const [newStudent, setNewStudent] = useState({
+    studentId: "",
+    fullName: "",
+    email: "",
+    phone: "",
+    gender: "",
+    classLevel: "",
+    attendance: "",
+    performance: ""
+  })
 
   useEffect(() => {
     fetchStudents()
@@ -84,6 +99,125 @@ export default function StudentsPage() {
       console.error('Error fetching students:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleAddStudent = async () => {
+    try {
+      // Generate a unique student ID
+      const studentId = `RJ_${Date.now()}`
+      
+      // Calculate risk assessment based on attendance and performance
+      const attendance = parseFloat(newStudent.attendance) || 0
+      const performance = parseFloat(newStudent.performance) || 0
+      const riskScore = Math.max(0, 100 - (attendance * 0.4 + performance * 0.6))
+      const riskLevel = riskScore >= 70 ? 'High' : riskScore >= 40 ? 'Medium' : 'Low'
+      const dropoutProbability = Math.min(100, riskScore * 1.2)
+
+      const studentData = {
+        studentId,
+        fullName: newStudent.fullName,
+        email: newStudent.email,
+        phone: newStudent.phone,
+        gender: newStudent.gender,
+        classLevel: parseInt(newStudent.classLevel),
+        attendance,
+        performance,
+        riskLevel,
+        riskScore: Math.round(riskScore),
+        dropoutProbability: Math.round(dropoutProbability)
+      }
+
+      const response = await fetch('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(studentData)
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        // Reset form and close modal
+        setNewStudent({
+          studentId: "",
+          fullName: "",
+          email: "",
+          phone: "",
+          gender: "",
+          classLevel: "",
+          attendance: "",
+          performance: ""
+        })
+        setIsAddStudentOpen(false)
+        // Refresh students list
+        fetchStudents()
+        alert('Student added successfully!')
+      } else {
+        alert('Failed to add student: ' + data.error)
+      }
+    } catch (err: any) {
+      alert('Failed to add student: ' + err.message)
+    }
+  }
+
+  const handleExportStudents = (riskLevel?: string) => {
+    try {
+      let studentsToExport = students
+      
+      // Filter by risk level if specified
+      if (riskLevel && riskLevel !== 'all') {
+        studentsToExport = students.filter(student => student.RiskLevel === riskLevel)
+      }
+
+      // Create CSV content
+      const headers = [
+        'Student ID',
+        'Student Name',
+        'Class',
+        'Gender',
+        'Attendance %',
+        'Performance %',
+        'Risk Level',
+        'Risk Score',
+        'Dropout Probability %',
+        'Email',
+        'Phone',
+        'Mentor Name',
+        'School Name'
+      ]
+
+      const csvContent = [
+        headers.join(','),
+        ...studentsToExport.map(student => [
+          student.StudentID,
+          `"${student.StudentName}"`,
+          student.StudentClass,
+          student.Gender,
+          parseFloat(student.AvgAttendance_LatestTerm).toFixed(1),
+          parseFloat(student.AvgMarks_LatestTerm).toFixed(1),
+          student.RiskLevel,
+          student.RiskScore,
+          parseFloat(student.DropoutProbability).toFixed(1),
+          `"${student.ContactEmail || ''}"`,
+          `"${student.ContactPhoneNumber || ''}"`,
+          `"${student.MentorName || 'Not assigned'}"`,
+          `"${student.SchoolName || 'Not assigned'}"`
+        ].join(','))
+      ].join('\n')
+
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `students_${riskLevel || 'all'}_${new Date().toISOString().split('T')[0]}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      alert(`Exported ${studentsToExport.length} students successfully!`)
+    } catch (err: any) {
+      alert('Failed to export students: ' + err.message)
     }
   }
 
@@ -138,13 +272,117 @@ export default function StudentsPage() {
               <p className="text-slate-600">Manage and monitor student performance and risk levels</p>
             </div>
             <div className="flex items-center space-x-3">
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Student
-              </Button>
-              <Button variant="outline">
+              <Dialog open={isAddStudentOpen} onOpenChange={setIsAddStudentOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Student
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Add New Student</DialogTitle>
+                    <DialogDescription>
+                      Enter the student's information to add them to the system.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid grid-cols-2 gap-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName">Full Name</Label>
+                      <Input
+                        id="fullName"
+                        value={newStudent.fullName}
+                        onChange={(e) => setNewStudent({...newStudent, fullName: e.target.value})}
+                        placeholder="Enter full name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={newStudent.email}
+                        onChange={(e) => setNewStudent({...newStudent, email: e.target.value})}
+                        placeholder="Enter email address"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input
+                        id="phone"
+                        value={newStudent.phone}
+                        onChange={(e) => setNewStudent({...newStudent, phone: e.target.value})}
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="gender">Gender</Label>
+                      <Select value={newStudent.gender} onValueChange={(value) => setNewStudent({...newStudent, gender: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Male">Male</SelectItem>
+                          <SelectItem value="Female">Female</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="classLevel">Class Level</Label>
+                      <Select value={newStudent.classLevel} onValueChange={(value) => setNewStudent({...newStudent, classLevel: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select class" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="6">Class 6</SelectItem>
+                          <SelectItem value="7">Class 7</SelectItem>
+                          <SelectItem value="8">Class 8</SelectItem>
+                          <SelectItem value="9">Class 9</SelectItem>
+                          <SelectItem value="10">Class 10</SelectItem>
+                          <SelectItem value="11">Class 11</SelectItem>
+                          <SelectItem value="12">Class 12</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="attendance">Attendance %</Label>
+                      <Input
+                        id="attendance"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={newStudent.attendance}
+                        onChange={(e) => setNewStudent({...newStudent, attendance: e.target.value})}
+                        placeholder="Enter attendance percentage"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="performance">Performance %</Label>
+                      <Input
+                        id="performance"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={newStudent.performance}
+                        onChange={(e) => setNewStudent({...newStudent, performance: e.target.value})}
+                        placeholder="Enter performance percentage"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => setIsAddStudentOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAddStudent}>
+                      Add Student
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <Button variant="outline" onClick={() => handleExportStudents()}>
                 <Download className="w-4 h-4 mr-2" />
-                Export
+                Export All
               </Button>
             </div>
           </div>
@@ -163,48 +401,64 @@ export default function StudentsPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-md">
+            <Card 
+              className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleExportStudents('Critical')}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-red-600">Critical Risk</p>
                     <p className="text-2xl font-bold text-red-900">{riskStats.critical}</p>
+                    <p className="text-xs text-red-600 mt-1">Click to export</p>
                   </div>
                   <AlertTriangle className="w-8 h-8 text-red-400" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-md">
+            <Card 
+              className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleExportStudents('High')}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-orange-600">High Risk</p>
                     <p className="text-2xl font-bold text-orange-900">{riskStats.high}</p>
+                    <p className="text-xs text-orange-600 mt-1">Click to export</p>
                   </div>
                   <AlertTriangle className="w-8 h-8 text-orange-400" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-md">
+            <Card 
+              className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleExportStudents('Medium')}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-yellow-600">Medium Risk</p>
                     <p className="text-2xl font-bold text-yellow-900">{riskStats.medium}</p>
+                    <p className="text-xs text-yellow-600 mt-1">Click to export</p>
                   </div>
                   <TrendingUp className="w-8 h-8 text-yellow-400" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-md">
+            <Card 
+              className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleExportStudents('Low')}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-green-600">Low Risk</p>
                     <p className="text-2xl font-bold text-green-900">{riskStats.low}</p>
+                    <p className="text-xs text-green-600 mt-1">Click to export</p>
                   </div>
                   <UserCheck className="w-8 h-8 text-green-400" />
                 </div>

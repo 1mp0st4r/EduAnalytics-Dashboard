@@ -96,17 +96,55 @@ export function Header({
           </Button>
 
           {/* Notifications */}
-          <Button variant="outline" size="sm" className="h-9 relative">
-            <Bell className="w-4 h-4" />
-            {notificationCount > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
-              >
-                {notificationCount > 99 ? "99+" : notificationCount}
-              </Badge>
-            )}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 relative">
+                <Bell className="w-4 h-4" />
+                {notificationCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                  >
+                    {notificationCount > 99 ? "99+" : notificationCount}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {notificationCount > 0 ? (
+                <>
+                  <DropdownMenuItem className="flex flex-col items-start p-3">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-orange-500" />
+                      <span className="font-medium">High Risk Alert</span>
+                    </div>
+                    <p className="text-sm text-slate-600 mt-1">
+                      {notificationCount} student{notificationCount > 1 ? 's' : ''} require{notificationCount === 1 ? 's' : ''} immediate attention
+                    </p>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex flex-col items-start p-3">
+                    <div className="flex items-center gap-2">
+                      <Bell className="w-4 h-4 text-blue-500" />
+                      <span className="font-medium">System Update</span>
+                    </div>
+                    <p className="text-sm text-slate-600 mt-1">
+                      New risk assessment data available
+                    </p>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-center justify-center">
+                    View All Notifications
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <DropdownMenuItem disabled>
+                  No new notifications
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* User Menu */}
           <DropdownMenu>

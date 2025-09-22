@@ -326,7 +326,10 @@ export default function Home() {
 
                   {/* Stats Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
+                    <Card 
+                      className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-xl transition-shadow cursor-pointer"
+                      onClick={() => window.open('/students', '_self')}
+                    >
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
@@ -341,7 +344,10 @@ export default function Home() {
                       </CardContent>
                     </Card>
 
-                    <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100">
+                    <Card 
+                      className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100 hover:shadow-xl transition-shadow cursor-pointer"
+                      onClick={() => window.open('/students?risk=high', '_self')}
+                    >
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
@@ -356,7 +362,10 @@ export default function Home() {
                       </CardContent>
                     </Card>
 
-                    <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
+                    <Card 
+                      className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100 hover:shadow-xl transition-shadow cursor-pointer"
+                      onClick={() => window.open('/students?attendance=low', '_self')}
+                    >
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
@@ -371,7 +380,10 @@ export default function Home() {
                       </CardContent>
                     </Card>
 
-                    <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
+                    <Card 
+                      className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-xl transition-shadow cursor-pointer"
+                      onClick={() => window.open('/ai-analytics', '_self')}
+                    >
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
@@ -389,7 +401,10 @@ export default function Home() {
 
                   {/* Quick Actions */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+                    <Card 
+                      className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                      onClick={() => window.open('/students?risk=high', '_self')}
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
@@ -403,7 +418,10 @@ export default function Home() {
                       </CardContent>
                     </Card>
 
-                    <Card className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+                    <Card 
+                      className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                      onClick={() => window.open('/ai-analytics', '_self')}
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -417,7 +435,10 @@ export default function Home() {
                       </CardContent>
                     </Card>
 
-                    <Card className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+                    <Card 
+                      className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                      onClick={() => window.open('/reports', '_self')}
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
