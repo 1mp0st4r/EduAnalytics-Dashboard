@@ -25,8 +25,6 @@ import {
   User, 
   BarChart3,
   Brain,
-  Database,
-  Mail as MailIcon,
   RefreshCw,
   LogOut,
   Eye,
@@ -106,8 +104,11 @@ export default function Home() {
 
   const handleLogin = (userType: "student" | "admin", credentials: any) => {
     setCurrentUser({ userType, ...credentials })
-    setAuthState(userType === "student" ? "student-dashboard" : "admin-dashboard")
-    if (userType === "admin") {
+    if (userType === "student") {
+      // Redirect to student dashboard
+      window.location.href = '/student-dashboard'
+    } else {
+      setAuthState("admin-dashboard")
       fetchData()
     }
   }
@@ -122,47 +123,6 @@ export default function Home() {
     setStatistics(null)
   }
 
-  const handleDatabaseTest = async () => {
-    setLoading(true)
-    try {
-      const response = await fetch('/api/test-db')
-      const data = await response.json()
-      if (data.success) {
-        alert(`Database Test Successful!\n\nConnection: ${data.data.connection}\nTotal Students: ${data.data.statistics.totalStudents}`)
-      } else {
-        alert('Database Test Failed!')
-      }
-    } catch (err) {
-      alert('Database Test Failed!')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleEmailTest = async () => {
-    setLoading(true)
-    try {
-      const response = await fetch('/api/test-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: 'test@example.com',
-          subject: 'Test Email',
-          text: 'This is a test email from EduAnalytics Dashboard'
-        })
-      })
-      const data = await response.json()
-      if (data.success) {
-        alert('Email Test Successful!')
-      } else {
-        alert('Email Test Failed!')
-      }
-    } catch (err) {
-      alert('Email Test Failed!')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const getRiskColor = (riskLevel: string) => {
     switch (riskLevel) {
@@ -240,50 +200,11 @@ export default function Home() {
                 </Button>
               </div>
 
-              <Separator />
-
-              <div className="space-y-2">
-                <div className="text-center text-sm text-slate-600 mb-3">System Tests</div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleDatabaseTest}
-                    disabled={loading}
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 h-9"
-                  >
-                    <Database className="w-3 h-3 mr-1" />
-                    {loading ? 'Testing...' : 'Database'}
-                  </Button>
-                  <Button
-                    onClick={handleEmailTest}
-                    disabled={loading}
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 h-9"
-                  >
-                    <MailIcon className="w-3 h-3 mr-1" />
-                    {loading ? 'Testing...' : 'Email'}
-                  </Button>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {authState === "student-dashboard" && (
-        <div className="p-8">
-          <h1 className="text-2xl font-bold mb-4">Student Dashboard</h1>
-          <p>Welcome, {currentUser?.username || 'Student'}!</p>
-          <button
-            onClick={handleBackToLogin}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Back to Login
-          </button>
-        </div>
-      )}
 
       {authState === "admin-dashboard" && (
         <div className="min-h-screen bg-slate-50">

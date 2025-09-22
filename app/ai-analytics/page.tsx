@@ -1,6 +1,30 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Sidebar } from "@/components/navigation/sidebar"
+import { Header } from "@/components/navigation/header"
+import { 
+  Brain, 
+  TrendingUp, 
+  AlertTriangle, 
+  Users, 
+  BarChart3,
+  ArrowLeft,
+  RefreshCw,
+  Eye,
+  Mail,
+  Phone,
+  GraduationCap,
+  Target,
+  Zap,
+  Shield
+} from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface Student {
   id: string
@@ -47,6 +71,7 @@ export default function AIAnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   useEffect(() => {
     fetchAnalyticsData()
@@ -69,6 +94,12 @@ export default function AIAnalyticsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await fetchAnalyticsData()
+    setIsRefreshing(false)
   }
 
   const getRiskColor = (riskLevel: string) => {
@@ -107,193 +138,281 @@ export default function AIAnalyticsPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="p-8">
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          <p className="mt-4 text-gray-600">Loading AI Analytics...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="p-8">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-        <button
-          onClick={fetchAnalyticsData}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Retry
-        </button>
-      </div>
-    )
-  }
-
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">AI Analytics Dashboard</h1>
-        <div className="flex space-x-4">
-          <button
-            onClick={fetchAnalyticsData}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Refresh Data
-          </button>
-          <a
-            href="/"
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-          >
-            Back to Dashboard
-          </a>
-        </div>
-      </div>
-
-      {analyticsData && (
-        <>
-          {/* Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg text-white">
-              <h3 className="text-lg font-semibold">Total Students</h3>
-              <p className="text-3xl font-bold">{analyticsData.statistics.totalStudents}</p>
+    <div className="min-h-screen bg-slate-50">
+      <Sidebar />
+      <div className="lg:pl-80">
+        <Header 
+          onRefresh={handleRefresh}
+          notificationCount={analyticsData?.statistics.highRiskStudents || 0}
+          isLoading={isRefreshing}
+        />
+        
+        <main className="p-6 space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
+                <Brain className="w-8 h-8 text-blue-600" />
+                AI Analytics Dashboard
+              </h1>
+              <p className="text-slate-600 mt-1">AI-powered insights and predictive analytics for student success</p>
             </div>
-            <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-lg text-white">
-              <h3 className="text-lg font-semibold">High Risk</h3>
-              <p className="text-3xl font-bold">{analyticsData.statistics.highRiskStudents}</p>
-            </div>
-            <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-lg text-white">
-              <h3 className="text-lg font-semibold">Avg Attendance</h3>
-              <p className="text-3xl font-bold">{analyticsData.statistics.avgAttendance.toFixed(1)}%</p>
-            </div>
-            <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-6 rounded-lg text-white">
-              <h3 className="text-lg font-semibold">Avg Performance</h3>
-              <p className="text-3xl font-bold">{analyticsData.statistics.avgPerformance.toFixed(1)}%</p>
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                variant="outline"
+                className="h-10"
+              >
+                <RefreshCw className={cn("w-4 h-4 mr-2", isRefreshing && "animate-spin")} />
+                Refresh
+              </Button>
+              <Button
+                onClick={() => window.open('/', '_self')}
+                variant="outline"
+                className="h-10"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Dashboard
+              </Button>
             </div>
           </div>
 
-          {/* Risk Distribution Chart */}
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-4">Risk Distribution</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Object.entries(analyticsData.riskDistribution).map(([level, count]) => (
-                <div key={level} className="text-center">
-                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRiskColor(level)}`}>
-                    {getRiskIcon(level)} {level.charAt(0).toUpperCase() + level.slice(1)}
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center space-y-4">
+                <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+                <p className="text-slate-600">Loading AI Analytics...</p>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <Alert className="border-red-200 bg-red-50">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {analyticsData && !loading && (
+            <>
+              {/* Overview Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-blue-600">Total Students</p>
+                        <p className="text-3xl font-bold text-blue-900">{analyticsData.statistics.totalStudents}</p>
+                        <p className="text-xs text-blue-600 mt-1">AI Monitored</p>
+                      </div>
+                      <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                        <Users className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-orange-600">High Risk</p>
+                        <p className="text-3xl font-bold text-orange-900">{analyticsData.statistics.highRiskStudents}</p>
+                        <p className="text-xs text-orange-600 mt-1">Requires AI Attention</p>
+                      </div>
+                      <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+                        <AlertTriangle className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-green-600">Avg Attendance</p>
+                        <p className="text-3xl font-bold text-green-900">{analyticsData.statistics.avgAttendance.toFixed(1)}%</p>
+                        <p className="text-xs text-green-600 mt-1">AI Predicted</p>
+                      </div>
+                      <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                        <TrendingUp className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-purple-600">Avg Performance</p>
+                        <p className="text-3xl font-bold text-purple-900">{analyticsData.statistics.avgPerformance.toFixed(1)}%</p>
+                        <p className="text-xs text-purple-600 mt-1">AI Analyzed</p>
+                      </div>
+                      <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+                        <BarChart3 className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Risk Distribution Chart */}
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="w-5 h-5 text-slate-600" />
+                    AI Risk Distribution Analysis
+                  </CardTitle>
+                  <CardDescription>
+                    Machine learning-powered risk assessment across all students
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {Object.entries(analyticsData.riskDistribution).map(([level, count]) => (
+                      <div key={level} className="text-center">
+                        <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRiskColor(level)}`}>
+                          {getRiskIcon(level)} {level.charAt(0).toUpperCase() + level.slice(1)}
+                        </div>
+                        <p className="text-2xl font-bold mt-2">{count}</p>
+                      </div>
+                    ))}
                   </div>
-                  <p className="text-2xl font-bold mt-2">{count}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+                </CardContent>
+              </Card>
 
-          {/* High Risk Students */}
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-4">High Risk Students Analysis</h2>
-            <div className="space-y-4">
-              {analyticsData.highRiskStudents.map((student) => (
-                <div
-                  key={student.id}
-                  className={`p-4 border rounded-lg cursor-pointer hover:shadow-md transition-shadow ${getRiskColor(student.RiskLevel)}`}
-                  onClick={() => setSelectedStudent(student)}
-                >
-                  <div className="flex justify-between items-start">
+              {/* High Risk Students */}
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-orange-600" />
+                    AI-Identified High Risk Students
+                  </CardTitle>
+                  <CardDescription>
+                    Students requiring immediate intervention based on AI analysis
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {analyticsData.highRiskStudents.map((student) => (
+                      <div
+                        key={student.id}
+                        className={`p-4 border rounded-lg cursor-pointer hover:shadow-md transition-shadow ${getRiskColor(student.RiskLevel)}`}
+                        onClick={() => setSelectedStudent(student)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-semibold">{student.StudentName}</h3>
+                            <p className="text-sm text-gray-600">{student.StudentID} • Class {student.StudentClass}</p>
+                            <p className="text-sm mt-1">
+                              Attendance: {parseFloat(student.AvgAttendance_LatestTerm).toFixed(1)}% • 
+                              Performance: {parseFloat(student.AvgMarks_LatestTerm).toFixed(1)}% • 
+                              Dropout Risk: {parseFloat(student.DropoutProbability).toFixed(1)}%
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(student.RiskLevel)}`}>
+                              {getRiskIcon(student.RiskLevel)} {student.RiskLevel}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* AI Recommendations */}
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Brain className="w-5 h-5 text-blue-600" />
+                    AI-Powered Recommendations
+                  </CardTitle>
+                  <CardDescription>
+                    Machine learning-generated intervention strategies for at-risk students
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {analyticsData.highRiskStudents.slice(0, 3).map((student) => (
+                      <div key={student.id} className="p-4 bg-gray-50 rounded-lg">
+                        <h3 className="font-semibold text-gray-900">{student.StudentName}</h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Risk Score: {student.RiskScore}/100 • {student.RiskLevel} Risk
+                        </p>
+                        <p className="text-sm text-gray-700 mt-2">
+                          <strong>AI Recommendation:</strong> {getRecommendation(student)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {/* Student Detail Modal */}
+          {selectedStudent && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <h2 className="text-2xl font-bold">AI Student Analysis</h2>
+                    <Button
+                      onClick={() => setSelectedStudent(null)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h3 className="font-semibold text-gray-700">Student Information</h3>
+                        <p><strong>Name:</strong> {selectedStudent.StudentName}</p>
+                        <p><strong>ID:</strong> {selectedStudent.StudentID}</p>
+                        <p><strong>Class:</strong> {selectedStudent.StudentClass}</p>
+                        <p><strong>Gender:</strong> {selectedStudent.Gender}</p>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-700">Academic Performance</h3>
+                        <p><strong>Attendance:</strong> {parseFloat(selectedStudent.AvgAttendance_LatestTerm).toFixed(1)}%</p>
+                        <p><strong>Performance:</strong> {parseFloat(selectedStudent.AvgMarks_LatestTerm).toFixed(1)}%</p>
+                        <p><strong>Risk Score:</strong> {selectedStudent.RiskScore}/100</p>
+                        <p><strong>Dropout Risk:</strong> {parseFloat(selectedStudent.DropoutProbability).toFixed(1)}%</p>
+                      </div>
+                    </div>
+
                     <div>
-                      <h3 className="font-semibold">{student.StudentName}</h3>
-                      <p className="text-sm text-gray-600">{student.StudentID} • Class {student.StudentClass}</p>
-                      <p className="text-sm mt-1">
-                        Attendance: {parseFloat(student.AvgAttendance_LatestTerm).toFixed(1)}% • 
-                        Performance: {parseFloat(student.AvgMarks_LatestTerm).toFixed(1)}% • 
-                        Dropout Risk: {parseFloat(student.DropoutProbability).toFixed(1)}%
+                      <h3 className="font-semibold text-gray-700 mb-2">AI Recommendation</h3>
+                      <p className="text-gray-700 bg-gray-50 p-3 rounded">
+                        {getRecommendation(selectedStudent)}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(student.RiskLevel)}`}>
-                        {getRiskIcon(student.RiskLevel)} {student.RiskLevel}
-                      </span>
+
+                    <div>
+                      <h3 className="font-semibold text-gray-700 mb-2">Contact Information</h3>
+                      <p><strong>Email:</strong> {selectedStudent.ContactEmail}</p>
+                      <p><strong>Phone:</strong> {selectedStudent.ContactPhoneNumber}</p>
+                      <p><strong>Mentor:</strong> {selectedStudent.MentorName || 'Not assigned'}</p>
+                      <p><strong>School:</strong> {selectedStudent.SchoolName}</p>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* AI Recommendations */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">AI-Powered Recommendations</h2>
-            <div className="space-y-4">
-              {analyticsData.highRiskStudents.slice(0, 3).map((student) => (
-                <div key={student.id} className="p-4 bg-gray-50 rounded-lg">
-                  <h3 className="font-semibold text-gray-900">{student.StudentName}</h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Risk Score: {student.RiskScore}/100 • {student.RiskLevel} Risk
-                  </p>
-                  <p className="text-sm text-gray-700 mt-2">
-                    <strong>Recommendation:</strong> {getRecommendation(student)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Student Detail Modal */}
-      {selectedStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <h2 className="text-2xl font-bold">Student Analysis</h2>
-                <button
-                  onClick={() => setSelectedStudent(null)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-              </div>
-              
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="font-semibold text-gray-700">Student Information</h3>
-                    <p><strong>Name:</strong> {selectedStudent.StudentName}</p>
-                    <p><strong>ID:</strong> {selectedStudent.StudentID}</p>
-                    <p><strong>Class:</strong> {selectedStudent.StudentClass}</p>
-                    <p><strong>Gender:</strong> {selectedStudent.Gender}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-700">Academic Performance</h3>
-                    <p><strong>Attendance:</strong> {parseFloat(selectedStudent.AvgAttendance_LatestTerm).toFixed(1)}%</p>
-                    <p><strong>Performance:</strong> {parseFloat(selectedStudent.AvgMarks_LatestTerm).toFixed(1)}%</p>
-                    <p><strong>Risk Score:</strong> {selectedStudent.RiskScore}/100</p>
-                    <p><strong>Dropout Risk:</strong> {parseFloat(selectedStudent.DropoutProbability).toFixed(1)}%</p>
-                  </div>
-                </div>
-
-            <div>
-                  <h3 className="font-semibold text-gray-700 mb-2">AI Recommendation</h3>
-                  <p className="text-gray-700 bg-gray-50 p-3 rounded">
-                    {getRecommendation(selectedStudent)}
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-gray-700 mb-2">Contact Information</h3>
-                  <p><strong>Email:</strong> {selectedStudent.ContactEmail}</p>
-                  <p><strong>Phone:</strong> {selectedStudent.ContactPhoneNumber}</p>
-                  <p><strong>Mentor:</strong> {selectedStudent.MentorName || 'Not assigned'}</p>
-                  <p><strong>School:</strong> {selectedStudent.SchoolName}</p>
-                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </main>
+      </div>
     </div>
   )
 }

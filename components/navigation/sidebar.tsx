@@ -21,7 +21,8 @@ import {
   Mail,
   Database,
   Menu,
-  X
+  X,
+  LogOut
 } from "lucide-react"
 
 const navigation = [
@@ -76,12 +77,6 @@ const quickActions = [
     icon: Mail,
     color: "text-blue-600"
   },
-  {
-    name: "Database Status",
-    href: "/admin/database",
-    icon: Database,
-    color: "text-green-600"
-  }
 ]
 
 interface SidebarProps {
@@ -182,7 +177,7 @@ function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate
 
       {/* Footer */}
       <div className="p-4 border-t border-slate-200">
-        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg mb-3">
           <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center">
             <UserCheck className="w-4 h-4 text-slate-600" />
           </div>
@@ -191,6 +186,18 @@ function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate
             <p className="text-xs text-slate-500">System Administrator</p>
           </div>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={() => {
+            // In a real app, this would clear auth tokens and redirect
+            window.location.href = '/'
+          }}
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Logout
+        </Button>
       </div>
     </div>
   )
