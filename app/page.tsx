@@ -166,9 +166,6 @@ export default function Home() {
     )
   }
 
-  const handleSignUp = () => {
-    setAuthState("signup")
-  }
 
   const handleBackToLogin = () => {
     setAuthState("login")
@@ -189,84 +186,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {authState === "login" && (
-        <div className="flex items-center justify-center min-h-screen p-4">
-          <Card className="w-full max-w-md shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
-            <CardHeader className="space-y-1 text-center">
-              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl">
-                <GraduationCap className="w-8 h-8 text-white" />
-              </div>
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                EduAnalytics
-              </CardTitle>
-              <CardDescription className="text-slate-600">
-                Advanced Student Success Platform
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="text-sm font-medium">Username</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="Enter your username"
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    className="h-11"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <Button
-                  onClick={() => handleLogin("admin", { username: "admin" })}
-                  className="w-full h-11 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium"
-                >
-                  <User className="w-4 h-4 mr-2" />
-                  Login as Admin
-                </Button>
-                <Button
-                  onClick={() => handleLogin("student", { username: "student" })}
-                  variant="outline"
-                  className="w-full h-11 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300"
-                >
-                  <GraduationCap className="w-4 h-4 mr-2" />
-                  Login as Student
-                </Button>
-              </div>
-
-              <div className="text-center">
-                <Button
-                  onClick={handleSignUp}
-                  variant="ghost"
-                  className="text-slate-600 hover:text-slate-900"
-                >
-                  Don't have an account? Sign up
-                </Button>
-              </div>
-
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-
       {authState === "admin-dashboard" && (
         <div className="min-h-screen bg-slate-50">
           <Sidebar />
           <div className="lg:pl-80">
             <Header 
               onRefresh={fetchData}
-              onTestDatabase={handleDatabaseTest}
-              onTestEmail={handleEmailTest}
               notificationCount={statistics?.highRiskStudents || 0}
               isLoading={loading}
             />
