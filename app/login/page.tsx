@@ -48,7 +48,7 @@ export default function LoginPage() {
       // Simulate login process
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      // Simple validation
+      // Simple validation - only require email if not using quick access
       if (!loginData.email) {
         setError("Please enter your email")
         return
@@ -56,6 +56,37 @@ export default function LoginPage() {
       
       // Determine user type based on email
       const userType = loginData.email.includes('admin') ? 'admin' : 'student'
+      
+      // Store login state in localStorage to prevent redirect loop
+      localStorage.setItem('isLoggedIn', 'true')
+      localStorage.setItem('userType', userType)
+      localStorage.setItem('userEmail', loginData.email)
+      
+      // Redirect based on user type
+      if (userType === 'admin') {
+        window.location.href = '/'
+      } else {
+        window.location.href = '/student-dashboard'
+      }
+    } catch (err) {
+      setError("Login failed. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleQuickLogin = async (userType: 'admin' | 'student') => {
+    setIsLoading(true)
+    setError("")
+    
+    try {
+      // Simulate login process
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // Store login state in localStorage to prevent redirect loop
+      localStorage.setItem('isLoggedIn', 'true')
+      localStorage.setItem('userType', userType)
+      localStorage.setItem('userEmail', userType === 'admin' ? 'admin@example.com' : 'student@example.com')
       
       // Redirect based on user type
       if (userType === 'admin') {
@@ -146,28 +177,24 @@ export default function LoginPage() {
             {/* Quick Access Buttons */}
             <div className="space-y-3 mb-6">
               <Button 
-                onClick={() => {
-                  setLoginData({ email: "admin@example.com", password: "" })
-                  handleLogin({ preventDefault: () => {} } as React.FormEvent)
-                }}
+                onClick={() => handleQuickLogin('admin')}
                 className="w-full h-12 text-lg"
                 size="lg"
+                disabled={isLoading}
               >
                 <Users className="w-5 h-5 mr-2" />
-                Quick Admin Access
+                {isLoading ? 'Signing in...' : 'Quick Admin Access'}
               </Button>
               
               <Button 
-                onClick={() => {
-                  setLoginData({ email: "student@example.com", password: "" })
-                  handleLogin({ preventDefault: () => {} } as React.FormEvent)
-                }}
+                onClick={() => handleQuickLogin('student')}
                 variant="outline"
                 className="w-full h-12 text-lg"
                 size="lg"
+                disabled={isLoading}
               >
                 <GraduationCap className="w-5 h-5 mr-2" />
-                Quick Student Access
+                {isLoading ? 'Signing in...' : 'Quick Student Access'}
               </Button>
             </div>
 

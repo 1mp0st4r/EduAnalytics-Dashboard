@@ -77,6 +77,22 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Check for existing login state on component mount
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem('isLoggedIn')
+    const userType = localStorage.getItem('userType')
+    
+    if (isLoggedIn === 'true' && userType) {
+      if (userType === 'admin') {
+        setAuthState('admin-dashboard')
+        fetchData()
+      } else if (userType === 'student') {
+        // Redirect to student dashboard
+        window.location.href = '/student-dashboard'
+      }
+    }
+  }, [])
+
   const fetchData = async () => {
     setLoading(true)
     setError(null)
@@ -151,6 +167,11 @@ export default function Home() {
 
 
   const handleBackToLogin = () => {
+    // Clear login state from localStorage
+    localStorage.removeItem('isLoggedIn')
+    localStorage.removeItem('userType')
+    localStorage.removeItem('userEmail')
+    
     setAuthState("login")
     setStudents([])
     setStatistics(null)

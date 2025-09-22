@@ -191,7 +191,11 @@ function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate
           size="sm"
           className="w-full"
           onClick={() => {
-            // In a real app, this would clear auth tokens and redirect
+            // Clear login state from localStorage
+            localStorage.removeItem('isLoggedIn')
+            localStorage.removeItem('userType')
+            localStorage.removeItem('userEmail')
+            // Redirect to home
             window.location.href = '/'
           }}
         >
