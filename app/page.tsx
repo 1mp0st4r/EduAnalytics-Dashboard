@@ -177,6 +177,34 @@ export default function Home() {
     setStatistics(null)
   }
 
+  const handleTestDatabase = async () => {
+    try {
+      const response = await fetch('/api/test-db')
+      const data = await response.json()
+      if (data.success) {
+        alert('Database connection successful!')
+      } else {
+        alert('Database connection failed: ' + data.error)
+      }
+    } catch (error) {
+      alert('Database test failed: ' + error)
+    }
+  }
+
+  const handleTestEmail = async () => {
+    try {
+      const response = await fetch('/api/test-email')
+      const data = await response.json()
+      if (data.success) {
+        alert('Email test successful!')
+      } else {
+        alert('Email test failed: ' + data.error)
+      }
+    } catch (error) {
+      alert('Email test failed: ' + error)
+    }
+  }
+
 
   const getRiskColor = (riskLevel: string) => {
     switch (riskLevel) {
@@ -196,6 +224,8 @@ export default function Home() {
           <div className="lg:pl-80">
             <Header 
               onRefresh={fetchData}
+              onTestDatabase={handleTestDatabase}
+              onTestEmail={handleTestEmail}
               notificationCount={statistics?.highRiskStudents || 0}
               isLoading={loading}
             />

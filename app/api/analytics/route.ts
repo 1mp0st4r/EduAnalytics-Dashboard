@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     switch (type) {
       case 'overview':
-        const stats = await neonService.getStudentStatistics()
+        const stats = await neonService.getStatistics()
         const highRiskStudents = await neonService.getStudents({ riskLevel: 'High' })
         const criticalRiskStudents = await neonService.getStudents({ riskLevel: 'Critical' })
         
@@ -20,27 +20,21 @@ export async function GET(request: NextRequest) {
           success: true,
           data: {
             statistics: stats,
-            highRiskStudents: highRiskStudents.slice(0, 10), // Top 10 high-risk
-            criticalRiskStudents: criticalRiskStudents.slice(0, 5), // Top 5 critical-risk
-            riskDistribution: {
-              low: stats.lowRiskStudents,
-              medium: stats.mediumRiskStudents,
-              high: stats.highRiskStudents,
-              critical: stats.criticalRiskStudents
-            }
+            highRiskStudents: [...highRiskStudents, ...criticalRiskStudents].slice(0, 10), // Top 10 high-risk
+            riskDistribution: stats.riskDistribution
           }
         })
 
       case 'risk-analysis':
         const allStudents = await neonService.getStudents({ limit: 1000 })
-        const statsForRiskAnalysis = await neonService.getStudentStatistics()
+        const statsForRiskAnalysis = await neonService.getStatistics()
         const riskAnalysis = {
           totalStudents: allStudents.length,
           dropoutRate: (statsForRiskAnalysis.dropoutStudents / statsForRiskAnalysis.totalStudents) * 100,
-          avgRiskScore: allStudents.reduce((sum: number, s: any) => sum + s.RiskScore, 0) / allStudents.length,
+          avgRiskScore: allStudents.reduce((sum: number, s: any) => sum + (s.RiskScore || 0), 0) / allStudents.length,
           riskFactors: {
-            lowAttendance: allStudents.filter((s: any) => s.AvgAttendance_LatestTerm < 70).length,
-            poorPerformance: allStudents.filter((s: any) => s.AvgMarks_LatestTerm < 50).length,
+            lowAttendance: allStudents.filter((s: any) => parseFloat(s.AvgAttendance_LatestTerm) < 70).length,
+            poorPerformance: allStudents.filter((s: any) => parseFloat(s.AvgMarks_LatestTerm) < 50).length,
             ruralStudents: allStudents.filter((s: any) => s.IsRural).length,
             firstGeneration: allStudents.filter((s: any) => s.IsFirstGenerationLearner).length
           }

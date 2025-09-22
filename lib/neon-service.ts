@@ -287,6 +287,68 @@ export class NeonService {
     }
   }
 
+  // Get statistics for dashboard
+  async getStatistics(): Promise<any> {
+    const pool = await this.getConnection()
+    try {
+      // Get basic statistics
+      const totalStudentsResult = await pool.query('SELECT COUNT(*) as count FROM students WHERE is_active = TRUE')
+      const totalStudents = parseInt(totalStudentsResult.rows[0].count)
+
+      const riskDistributionResult = await pool.query(`
+        SELECT 
+          risk_level,
+          COUNT(*) as count
+        FROM students 
+        WHERE is_active = TRUE 
+        GROUP BY risk_level
+      `)
+
+      const riskDistribution = {
+        critical: 0,
+        high: 0,
+        medium: 0,
+        low: 0
+      }
+
+      riskDistributionResult.rows.forEach(row => {
+        const level = row.risk_level.toLowerCase()
+        if (level in riskDistribution) {
+          riskDistribution[level as keyof typeof riskDistribution] = parseInt(row.count)
+        }
+      })
+
+      const avgStatsResult = await pool.query(`
+        SELECT 
+          AVG(current_attendance) as avg_attendance,
+          AVG(current_performance) as avg_performance,
+          AVG(dropout_probability) as avg_dropout_probability
+        FROM students 
+        WHERE is_active = TRUE
+      `)
+
+      const avgStats = avgStatsResult.rows[0]
+
+      return {
+        totalStudents,
+        highRiskStudents: riskDistribution.critical + riskDistribution.high,
+        mediumRiskStudents: riskDistribution.medium,
+        lowRiskStudents: riskDistribution.low,
+        criticalRiskStudents: riskDistribution.critical,
+        dropoutStudents: 0, // We can add this later if needed
+        avgAttendance: parseFloat(avgStats.avg_attendance) || 0,
+        avgPerformance: parseFloat(avgStats.avg_performance) || 0,
+        avgDropoutProbability: parseFloat(avgStats.avg_dropout_probability) || 0,
+        riskDistribution
+      }
+    } catch (error: any) {
+      console.error('❌ Error fetching statistics:', error)
+      throw error
+    } finally {
+      await pool.end()
+    }
+  }
+
   // Close database connection (no-op for serverless)
   async close(): Promise<void> {
     // No persistent connections to close in serverless mode
