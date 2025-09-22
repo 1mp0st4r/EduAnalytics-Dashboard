@@ -4,12 +4,34 @@
 
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![MySQL](https://img.shields.io/badge/MySQL-8-orange?style=for-the-badge&logo=mysql)](https://www.mysql.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?style=for-the-badge&logo=postgresql)](https://www.postgresql.org/)
+[![Neon](https://img.shields.io/badge/Neon-Serverless-00D4AA?style=for-the-badge&logo=postgresql)](https://neon.tech/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel)](https://vercel.com/)
 
 ## 🌟 Overview
 
 EduAnalytics Dashboard is a comprehensive educational analytics platform designed to help institutions identify at-risk students early and implement targeted interventions. The system combines machine learning algorithms, real-time data analysis, and automated notification systems to support student success.
+
+## 🚀 Recent Updates (Latest)
+
+### ✅ **Fully Functional Production System**
+- **Live Deployment**: https://eduanalytics-dashboard.vercel.app
+- **Database**: 10,000+ students with Neon PostgreSQL
+- **Mentors**: 10 mentors randomly assigned to students
+- **Features**: Complete UI/UX overhaul with modern design
+- **APIs**: All endpoints working with proper error handling
+- **Email**: SMTP integration with Gmail
+- **Export**: CSV export functionality for all data
+
+### 🎯 **Key Features Implemented**
+- **Admin Dashboard**: Real-time analytics with 10,000+ students
+- **Student Dashboard**: Personalized view for individual students
+- **Risk Assessment**: AI-powered explanations for risk levels
+- **Student Management**: Add, edit, export students with CSV support
+- **Mentor System**: 10 mentors with random assignment
+- **Reports**: Comprehensive reporting and analytics
+- **Notifications**: Functional email system with test capabilities
 
 ### 🎯 Key Features
 
@@ -47,7 +69,7 @@ EduAnalytics Dashboard is a comprehensive educational analytics platform designe
 
 ### Backend
 - **Next.js API Routes** - Serverless API endpoints
-- **MySQL 8** - Relational database
+- **Neon PostgreSQL** - Serverless PostgreSQL database
 - **Node.js** - JavaScript runtime
 
 ### Machine Learning
@@ -62,11 +84,12 @@ EduAnalytics Dashboard is a comprehensive educational analytics platform designe
 
 ## 📊 Database Schema
 
-The system uses a comprehensive MySQL schema with the following key tables:
+The system uses a comprehensive PostgreSQL schema with the following key tables:
 
-- **Students** - Student profiles and academic data
+- **Students** - Student profiles and academic data (10,000+ records)
 - **Schools** - Institution information
-- **Mentors** - Teacher/counselor assignments
+- **Mentors** - Teacher/counselor assignments (10 mentors)
+- **Users** - Authentication and user management
 - **Academic Records** - Grades and performance data
 - **Attendance** - Attendance tracking
 - **AI Predictions** - ML model results and confidence scores
@@ -77,7 +100,7 @@ The system uses a comprehensive MySQL schema with the following key tables:
 ### Prerequisites
 
 - **Node.js** 18+ and npm
-- **MySQL** 8+ server
+- **PostgreSQL** (Neon recommended for production)
 - **Git** for version control
 
 ### 1. Clone the Repository
@@ -98,36 +121,37 @@ npm install
 Create a `.env.local` file in the root directory:
 
 ```env
-# Database Configuration
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_mysql_password
-DB_NAME=StudentAnalyticsDB
-DB_PORT=3306
+# Database Configuration (Neon PostgreSQL)
+DATABASE_URL=postgresql://username:password@hostname:port/database?sslmode=require
+NEON_URL=postgresql://username:password@hostname:port/database?sslmode=require
 
 # Email Configuration
 FROM_EMAIL=your-email@gmail.com
+FROM_NAME=EduAnalytics Support
 EMAIL_API_KEY=your_gmail_app_password
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
 
 # Application Configuration
-NEXT_PUBLIC_API_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=https://eduanalytics-dashboard.vercel.app
 JWT_SECRET=your_jwt_secret_key
-NODE_ENV=development
+NODE_ENV=production
 ```
 
 ### 4. Database Setup
 
 ```bash
-# Start MySQL server (using Docker)
-docker run --name eduanalytics-mysql \
-  -e MYSQL_ROOT_PASSWORD=your_password \
-  -p 3306:3306 -d mysql:8
+# For local development with Neon PostgreSQL
+# 1. Create a Neon account at https://neon.tech
+# 2. Create a new database
+# 3. Copy the connection string to your .env.local
 
-# Setup database and import data
-npm run setup
+# Import sample data
+npm run import-data
+
+# Populate mentors
+npm run populate-mentors
 ```
 
 ### 5. Start Development Server
@@ -148,8 +172,8 @@ npm run start        # Start production server
 npm run lint         # Run ESLint
 
 # Database
-npm run setup        # Setup database and import data
-npm run db:reset     # Reset database (WARNING: Deletes all data)
+npm run import-data  # Import student data from CSV
+npm run populate-mentors  # Populate mentor database
 
 # Testing
 npm run test         # Run test suite
@@ -168,30 +192,29 @@ npm run test:watch   # Run tests in watch mode
 
 ### Database Configuration
 
-The system supports various MySQL configurations:
+The system uses Neon PostgreSQL for production and supports various configurations:
 
 ```env
-# Local MySQL
-DB_HOST=localhost
-DB_PORT=3306
+# Neon PostgreSQL (Production)
+DATABASE_URL=postgresql://username:password@hostname:port/database?sslmode=require
 
-# Docker MySQL
-DB_HOST=localhost
-DB_PORT=3306
+# Local PostgreSQL (Development)
+DATABASE_URL=postgresql://username:password@localhost:5432/database
 
-# Cloud MySQL (AWS RDS, Google Cloud SQL, etc.)
-DB_HOST=your-cloud-host.amazonaws.com
-DB_PORT=3306
+# Other PostgreSQL providers
+DATABASE_URL=postgresql://username:password@your-provider.com:5432/database
 ```
 
 ## 📊 Sample Data
 
-The system comes with 92 synthetic student records from Rajasthan, India, including:
+The system comes with 10,000+ synthetic student records from Rajasthan, India, including:
 
 - **Demographic Data**: Age, gender, location, family background
 - **Academic Performance**: Grades, attendance, subject-wise scores
 - **Socioeconomic Factors**: Income, parental education, technology access
 - **Risk Indicators**: Dropout probability, intervention history
+- **Mentor Assignments**: 10 mentors randomly assigned to students
+- **Class Diversity**: Students across classes 6-12
 
 ## 🎯 Use Cases
 
@@ -276,8 +299,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Phase 1 ✅ (Completed)
 - [x] Basic dashboard functionality
 - [x] Student management system
-- [x] Database integration
+- [x] Database integration (Neon PostgreSQL)
 - [x] Email notification system
+- [x] AI risk assessment system
+- [x] Mentor management system
+- [x] Comprehensive UI/UX overhaul
+- [x] Vercel deployment with environment variables
+- [x] Risk explanation system
+- [x] CSV export functionality
+- [x] Student dashboard
+- [x] Reports and analytics
 
 ### Phase 2 🚧 (In Progress)
 - [ ] Advanced ML models
