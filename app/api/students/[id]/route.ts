@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { neonService } from "@/lib/neon-service"
+import { neonService } from "../../../../lib/neon-service"
 
 // Get specific student by ID
 export async function GET(

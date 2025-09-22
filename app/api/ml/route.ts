@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { dbService } from "@/lib/database-service"
+import { dbService } from "../../../lib/database-service"
 
 // ML Risk Assessment and Prediction API
 export async function POST(request: NextRequest) {

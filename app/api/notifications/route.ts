@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 const nodemailer = require('nodemailer')
-import { dbService } from "@/lib/database-service"
+import { dbService } from "../../../lib/database-service"
 
 // Email notification system
 export async function POST(request: NextRequest) {
