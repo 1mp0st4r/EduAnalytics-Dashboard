@@ -4,6 +4,40 @@ import { EmailService } from "../../../lib/email-service"
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
 
+export async function GET(request: NextRequest) {
+  try {
+    const emailService = new EmailService()
+    
+    // Test email configuration
+    const isConnected = await emailService.verifyConnection()
+    
+    if (!isConnected) {
+      return NextResponse.json(
+        { success: false, error: "Email service not configured properly" },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Email service is configured and ready",
+      data: {
+        smtpHost: process.env.SMTP_HOST,
+        smtpPort: process.env.SMTP_PORT,
+        fromEmail: process.env.FROM_EMAIL,
+        timestamp: new Date().toISOString()
+      }
+    })
+
+  } catch (error) {
+    console.error("[API] Error testing email:", error)
+    return NextResponse.json(
+      { success: false, error: "Email test failed: " + error.message },
+      { status: 500 }
+    )
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { to, subject, text } = await request.json()
