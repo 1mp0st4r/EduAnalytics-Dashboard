@@ -26,6 +26,7 @@
       "@/components/dashboard/*": ["./components/dashboard/*"],
       "@/components/ui/*": ["./components/ui/*"],
       "@/lib/*": ["./lib/*"],
+      "@/lib/utils": ["./lib/utils"],
       "@/app/*": ["./app/*"],
       "@/hooks/*": ["./hooks/*"]
     }
