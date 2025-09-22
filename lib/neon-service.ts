@@ -1,4 +1,4 @@
-import { Pool, PoolClient } from 'pg'
+import { Pool } from 'pg'
 
 // Neon PostgreSQL database service - optimized for serverless
 export class NeonService {

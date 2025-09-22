@@ -1,8 +1,45 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Separator } from "@/components/ui/separator"
+import { Sidebar } from "@/components/navigation/sidebar"
+import { Header } from "@/components/navigation/header"
+import { 
+  Users, 
+  AlertTriangle, 
+  TrendingUp, 
+  GraduationCap, 
+  Phone, 
+  Mail, 
+  User, 
+  BarChart3,
+  Brain,
+  Database,
+  Mail as MailIcon,
+  RefreshCw,
+  LogOut,
+  Eye,
+  ChevronRight,
+  Search,
+  Filter,
+  Download,
+  Plus,
+  MoreHorizontal,
+  FileText
+} from "lucide-react"
 
-type AuthState = "login" | "signup" | "student-dashboard" | "admin-dashboard" | "database-test" | "email-test"
+type AuthState = "login" | "signup" | "student-dashboard" | "admin-dashboard"
 
 interface Student {
   id: string
@@ -138,66 +175,100 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       {authState === "login" && (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-            <h1 className="text-2xl font-bold text-center mb-6">EduAnalytics Dashboard</h1>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter username"
-                />
+        <div className="flex items-center justify-center min-h-screen p-4">
+          <Card className="w-full max-w-md shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
+            <CardHeader className="space-y-1 text-center">
+              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl">
+                <GraduationCap className="w-8 h-8 text-white" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                <input
-                  type="password"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter password"
-                />
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                EduAnalytics
+              </CardTitle>
+              <CardDescription className="text-slate-600">
+                Advanced Student Success Platform
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="text-sm font-medium">Username</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="Enter your username"
+                    className="h-11"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    className="h-11"
+                  />
+                </div>
               </div>
-              <button
-                onClick={() => handleLogin("admin", { username: "admin" })}
-                className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                Login as Admin
-              </button>
-              <button
-                onClick={() => handleLogin("student", { username: "student" })}
-                className="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                Login as Student
-              </button>
-              <div className="text-center">
-                <button
-                  onClick={handleSignUp}
-                  className="text-blue-600 hover:text-blue-800 text-sm"
+              
+              <div className="space-y-3">
+                <Button
+                  onClick={() => handleLogin("admin", { username: "admin" })}
+                  className="w-full h-11 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium"
                 >
-                  Sign Up
-                </button>
+                  <User className="w-4 h-4 mr-2" />
+                  Login as Admin
+                </Button>
+                <Button
+                  onClick={() => handleLogin("student", { username: "student" })}
+                  variant="outline"
+                  className="w-full h-11 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300"
+                >
+                  <GraduationCap className="w-4 h-4 mr-2" />
+                  Login as Student
+                </Button>
               </div>
-            </div>
-            <div className="mt-6 text-center">
-              <button
-                onClick={handleDatabaseTest}
-                disabled={loading}
-                className="text-blue-600 hover:text-blue-800 text-sm mr-4 disabled:opacity-50"
-              >
-                {loading ? 'Testing...' : 'Test Database'}
-              </button>
-              <button
-                onClick={handleEmailTest}
-                disabled={loading}
-                className="text-green-600 hover:text-green-800 text-sm disabled:opacity-50"
-              >
-                {loading ? 'Testing...' : 'Test Email'}
-              </button>
-            </div>
-          </div>
+
+              <div className="text-center">
+                <Button
+                  onClick={handleSignUp}
+                  variant="ghost"
+                  className="text-slate-600 hover:text-slate-900"
+                >
+                  Don't have an account? Sign up
+                </Button>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <div className="text-center text-sm text-slate-600 mb-3">System Tests</div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleDatabaseTest}
+                    disabled={loading}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-9"
+                  >
+                    <Database className="w-3 h-3 mr-1" />
+                    {loading ? 'Testing...' : 'Database'}
+                  </Button>
+                  <Button
+                    onClick={handleEmailTest}
+                    disabled={loading}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-9"
+                  >
+                    <MailIcon className="w-3 h-3 mr-1" />
+                    {loading ? 'Testing...' : 'Email'}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
@@ -215,187 +286,294 @@ export default function Home() {
       )}
 
       {authState === "admin-dashboard" && (
-        <div className="p-8">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <div className="flex space-x-4">
-              <a
-                href="/ai-analytics"
-                className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
-              >
-                AI Analytics
-              </a>
-              <button
-                onClick={handleBackToLogin}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-
-          {loading && (
-            <div className="text-center py-4">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <p className="mt-2">Loading data...</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-              {error}
-            </div>
-          )}
-
-          {statistics && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold text-gray-700">Total Students</h3>
-                <p className="text-3xl font-bold text-blue-600">{statistics.totalStudents}</p>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold text-gray-700">High Risk</h3>
-                <p className="text-3xl font-bold text-orange-600">{statistics.highRiskStudents}</p>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold text-gray-700">Avg Attendance</h3>
-                <p className="text-3xl font-bold text-green-600">{statistics.avgAttendance.toFixed(1)}%</p>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold text-gray-700">Avg Performance</h3>
-                <p className="text-3xl font-bold text-purple-600">{statistics.avgPerformance.toFixed(1)}%</p>
-              </div>
-            </div>
-          )}
-
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold">Student Risk Analysis</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attendance</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Risk Level</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dropout Risk</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mentor</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {students.map((student) => (
-                    <tr key={student.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{student.StudentName}</div>
-                          <div className="text-sm text-gray-500">{student.StudentID}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        Class {student.StudentClass}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {parseFloat(student.AvgAttendance_LatestTerm).toFixed(1)}%
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {parseFloat(student.AvgMarks_LatestTerm).toFixed(1)}%
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRiskColor(student.RiskLevel)}`}>
-                          {student.RiskLevel}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {parseFloat(student.DropoutProbability).toFixed(1)}%
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {student.MentorName || 'N/A'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-4">Risk Distribution</h3>
-              {statistics && (
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Critical Risk</span>
-                    <span className="font-semibold text-red-600">{statistics.criticalRiskStudents}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>High Risk</span>
-                    <span className="font-semibold text-orange-600">{statistics.highRiskStudents}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Medium Risk</span>
-                    <span className="font-semibold text-yellow-600">{statistics.mediumRiskStudents}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Low Risk</span>
-                    <span className="font-semibold text-green-600">{statistics.lowRiskStudents}</span>
+        <div className="min-h-screen bg-slate-50">
+          <Sidebar />
+          <div className="lg:pl-80">
+            <Header 
+              onRefresh={fetchData}
+              onTestDatabase={handleDatabaseTest}
+              onTestEmail={handleEmailTest}
+              notificationCount={statistics?.highRiskStudents || 0}
+              isLoading={loading}
+            />
+            
+            <main className="p-6 space-y-6">
+              {loading && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center space-y-4">
+                    <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+                    <p className="text-slate-600">Loading dashboard data...</p>
                   </div>
                 </div>
               )}
-            </div>
 
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-              <div className="space-y-2">
-                <button
-                  onClick={fetchData}
-                  className="w-full text-left px-4 py-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
-                >
-                  Refresh Data
-                </button>
-                <button
-                  onClick={handleDatabaseTest}
-                  className="w-full text-left px-4 py-2 bg-green-50 text-green-700 rounded hover:bg-green-100"
-                >
-                  Test Database Connection
-                </button>
-                <button
-                  onClick={handleEmailTest}
-                  className="w-full text-left px-4 py-2 bg-purple-50 text-purple-700 rounded hover:bg-purple-100"
-                >
-                  Test Email System
-                </button>
-              </div>
-            </div>
+              {error && (
+                <Alert className="border-red-200 bg-red-50">
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <AlertDescription className="text-red-800">
+                    {error}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {statistics && (
+                <>
+                  {/* Welcome Section */}
+                  <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome back, Admin!</h1>
+                    <p className="text-slate-600">Here's what's happening with your students today.</p>
+                  </div>
+
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-blue-600">Total Students</p>
+                            <p className="text-3xl font-bold text-blue-900">{statistics.totalStudents}</p>
+                            <p className="text-xs text-blue-600 mt-1">+12% from last month</p>
+                          </div>
+                          <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                            <Users className="w-6 h-6 text-white" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-orange-600">High Risk</p>
+                            <p className="text-3xl font-bold text-orange-900">{statistics.highRiskStudents}</p>
+                            <p className="text-xs text-orange-600 mt-1">Requires attention</p>
+                          </div>
+                          <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+                            <AlertTriangle className="w-6 h-6 text-white" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-green-600">Avg Attendance</p>
+                            <p className="text-3xl font-bold text-green-900">{statistics.avgAttendance.toFixed(1)}%</p>
+                            <p className="text-xs text-green-600 mt-1">+2.1% from last week</p>
+                          </div>
+                          <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                            <TrendingUp className="w-6 h-6 text-white" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-purple-600">Avg Performance</p>
+                            <p className="text-3xl font-bold text-purple-900">{statistics.avgPerformance.toFixed(1)}%</p>
+                            <p className="text-xs text-purple-600 mt-1">+1.8% from last week</p>
+                          </div>
+                          <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+                            <BarChart3 className="w-6 h-6 text-white" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+                      <CardContent className="p-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                            <AlertTriangle className="w-5 h-5 text-red-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-900">High Risk Students</p>
+                            <p className="text-sm text-slate-500">{statistics.highRiskStudents} need attention</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+                      <CardContent className="p-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <Brain className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-900">AI Analytics</p>
+                            <p className="text-sm text-slate-500">View detailed insights</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+                      <CardContent className="p-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-green-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-900">Generate Report</p>
+                            <p className="text-sm text-slate-500">Export student data</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Student Analysis Table */}
+                  <Card className="border-0 shadow-lg">
+                    <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="flex items-center space-x-2">
+                            <BarChart3 className="w-5 h-5 text-slate-600" />
+                            <span>Student Risk Analysis</span>
+                          </CardTitle>
+                          <CardDescription>
+                            Comprehensive overview of student performance and risk levels
+                          </CardDescription>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button variant="outline" size="sm">
+                            <Filter className="w-4 h-4 mr-2" />
+                            Filter
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <Download className="w-4 h-4 mr-2" />
+                            Export
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-slate-50/50">
+                              <TableHead className="font-semibold">Student</TableHead>
+                              <TableHead className="font-semibold">Class</TableHead>
+                              <TableHead className="font-semibold">Attendance</TableHead>
+                              <TableHead className="font-semibold">Performance</TableHead>
+                              <TableHead className="font-semibold">Risk Level</TableHead>
+                              <TableHead className="font-semibold">Dropout Risk</TableHead>
+                              <TableHead className="font-semibold">Mentor</TableHead>
+                              <TableHead className="font-semibold">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {students.slice(0, 10).map((student) => (
+                              <TableRow key={student.id} className="hover:bg-slate-50/50 transition-colors">
+                                <TableCell>
+                                  <div className="flex items-center space-x-3">
+                                    <Avatar className="w-10 h-10">
+                                      <AvatarFallback className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold">
+                                        {student.StudentName.split(' ').map(n => n[0]).join('')}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <div className="font-medium text-slate-900">{student.StudentName}</div>
+                                      <div className="text-sm text-slate-500">{student.StudentID}</div>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                    Class {student.StudentClass}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="space-y-1">
+                                    <div className="text-sm font-medium">{parseFloat(student.AvgAttendance_LatestTerm).toFixed(1)}%</div>
+                                    <Progress 
+                                      value={parseFloat(student.AvgAttendance_LatestTerm)} 
+                                      className="w-16 h-2"
+                                    />
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="space-y-1">
+                                    <div className="text-sm font-medium">{parseFloat(student.AvgMarks_LatestTerm).toFixed(1)}%</div>
+                                    <Progress 
+                                      value={parseFloat(student.AvgMarks_LatestTerm)} 
+                                      className="w-16 h-2"
+                                    />
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge 
+                                    variant={student.RiskLevel === 'Critical' ? 'destructive' : 
+                                            student.RiskLevel === 'High' ? 'destructive' : 
+                                            student.RiskLevel === 'Medium' ? 'secondary' : 'default'}
+                                    className={`${getRiskColor(student.RiskLevel)} font-medium`}
+                                  >
+                                    {student.RiskLevel}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="text-sm font-medium text-slate-900">
+                                    {parseFloat(student.DropoutProbability).toFixed(1)}%
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center space-x-2">
+                                    <Avatar className="w-6 h-6">
+                                      <AvatarFallback className="text-xs bg-slate-200 text-slate-600">
+                                        {student.MentorName ? student.MentorName.split(' ').map(n => n[0]).join('') : 'N/A'}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-sm text-slate-600">
+                                      {student.MentorName || 'Not assigned'}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center space-x-1">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="h-8 w-8 p-0"
+                                      onClick={() => window.open(`/students/${student.id}`, '_blank')}
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                      <MoreHorizontal className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                      {students.length > 10 && (
+                        <div className="p-4 border-t border-slate-200 text-center">
+                          <Button variant="outline" className="mr-2">
+                            View All Students
+                          </Button>
+                          <Button variant="outline">
+                            Load More
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </main>
           </div>
-        </div>
-      )}
-
-      {authState === "database-test" && (
-        <div className="p-8">
-          <h1 className="text-2xl font-bold mb-4">Database Test</h1>
-          <p>Database connection test would be here.</p>
-          <button
-            onClick={handleBackToLogin}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Back to Login
-          </button>
-        </div>
-      )}
-
-      {authState === "email-test" && (
-        <div className="p-8">
-          <h1 className="text-2xl font-bold mb-4">Email Test</h1>
-          <p>Email functionality test would be here.</p>
-          <button
-            onClick={handleBackToLogin}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Back to Login
-          </button>
         </div>
       )}
     </div>
