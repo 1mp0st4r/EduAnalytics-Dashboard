@@ -90,16 +90,20 @@ export default function StudentsPage() {
     setLoading(true)
     setError(null)
     try {
+      console.log('🔄 Fetching students...')
       const response = await fetch('/api/students?limit=1000')
       const data = await response.json()
+      console.log('📊 Students response:', data)
       if (data.success) {
         setStudents(data.data)
+        console.log('✅ Students loaded:', data.data.length)
       } else {
         setError('Failed to fetch students')
+        console.error('❌ Students fetch failed:', data.error)
       }
     } catch (err) {
       setError('Failed to fetch students')
-      console.error('Error fetching students:', err)
+      console.error('❌ Error fetching students:', err)
     } finally {
       setLoading(false)
     }

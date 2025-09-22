@@ -97,22 +97,32 @@ export default function Home() {
     setLoading(true)
     setError(null)
     try {
+      console.log('🔄 Fetching data...')
+      
       // Fetch students
       const studentsResponse = await fetch('/api/students?limit=100')
       const studentsData = await studentsResponse.json()
+      console.log('📊 Students response:', studentsData)
       if (studentsData.success) {
         setStudents(studentsData.data)
+        console.log('✅ Students loaded:', studentsData.data.length)
+      } else {
+        console.error('❌ Students fetch failed:', studentsData.error)
       }
 
       // Fetch statistics
       const statsResponse = await fetch('/api/analytics')
       const statsData = await statsResponse.json()
+      console.log('📈 Stats response:', statsData)
       if (statsData.success) {
         setStatistics(statsData.data.statistics)
+        console.log('✅ Statistics loaded:', statsData.data.statistics)
+      } else {
+        console.error('❌ Stats fetch failed:', statsData.error)
       }
     } catch (err) {
       setError('Failed to fetch data')
-      console.error('Error fetching data:', err)
+      console.error('❌ Error fetching data:', err)
     } finally {
       setLoading(false)
     }
