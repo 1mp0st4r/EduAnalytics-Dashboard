@@ -15,7 +15,8 @@ import {
   Eye, 
   EyeOff,
   ArrowLeft,
-  CheckCircle
+  CheckCircle,
+  Users
 } from "lucide-react"
 import Link from "next/link"
 
@@ -142,7 +143,44 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login" className="w-full">
+            {/* Quick Access Buttons */}
+            <div className="space-y-3 mb-6">
+              <Button 
+                onClick={() => {
+                  setLoginData({ email: "admin@example.com", password: "" })
+                  handleLogin({ preventDefault: () => {} } as React.FormEvent)
+                }}
+                className="w-full h-12 text-lg"
+                size="lg"
+              >
+                <Users className="w-5 h-5 mr-2" />
+                Quick Admin Access
+              </Button>
+              
+              <Button 
+                onClick={() => {
+                  setLoginData({ email: "student@example.com", password: "" })
+                  handleLogin({ preventDefault: () => {} } as React.FormEvent)
+                }}
+                variant="outline"
+                className="w-full h-12 text-lg"
+                size="lg"
+              >
+                <GraduationCap className="w-5 h-5 mr-2" />
+                Quick Student Access
+              </Button>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-muted-foreground">Or continue with detailed login</span>
+              </div>
+            </div>
+
+            <Tabs defaultValue="login" className="w-full mt-6">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>

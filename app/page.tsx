@@ -113,52 +113,35 @@ export default function Home() {
     }
   }
 
-  // If not authenticated, show login form
+  // If not authenticated, show landing page
   if (authState === "login") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md text-center">
           {/* Logo and Title */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl mb-4">
-              <GraduationCap className="w-8 h-8 text-white" />
+          <div className="mb-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl mb-6">
+              <GraduationCap className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-slate-900">EduAnalytics</h1>
-            <p className="text-slate-600 mt-2">Student Dropout Prevention System</p>
+            <h1 className="text-4xl font-bold text-slate-900 mb-2">EduAnalytics</h1>
+            <p className="text-slate-600 text-lg">Student Dropout Prevention System</p>
           </div>
 
           <Card className="border-0 shadow-xl">
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="text-2xl">Quick Access</CardTitle>
-              <CardDescription>
-                Choose your account type to continue
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-8">
+              <h2 className="text-2xl font-semibold text-slate-900 mb-4">Welcome to EduAnalytics</h2>
+              <p className="text-slate-600 mb-6">
+                Access your personalized dashboard to track student progress, analyze risk factors, and prevent dropouts.
+              </p>
+              
               <Button 
-                onClick={() => handleLogin("admin", { email: "admin@example.com", name: "Admin User" })}
+                onClick={() => window.location.href = '/login'}
                 className="w-full h-12 text-lg"
                 size="lg"
               >
-                <Users className="w-5 h-5 mr-2" />
-                Admin Dashboard
+                <User className="w-5 h-5 mr-2" />
+                Get Started
               </Button>
-              
-              <Button 
-                onClick={() => handleLogin("student", { email: "student@example.com", name: "Student User" })}
-                variant="outline"
-                className="w-full h-12 text-lg"
-                size="lg"
-              >
-                <GraduationCap className="w-5 h-5 mr-2" />
-                Student Dashboard
-              </Button>
-              
-              <div className="mt-4 text-center">
-                <Button variant="link" onClick={() => window.location.href = '/login'}>
-                  Go to Full Login Page
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>
