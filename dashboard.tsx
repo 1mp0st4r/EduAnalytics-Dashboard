@@ -42,7 +42,7 @@ import {
 } from "recharts"
 import StudentManagement from "@/components/student-management"
 import RiskAssessment from "@/components/risk-assessment"
-import PredictiveAnalytics from "@/components/predictive-analytics"
+import PredictiveAnalytics from "@/components/ai/predictive-analytics"
 import ReportsAnalytics from "@/components/reports-analytics"
 import DatabaseManagement from "@/components/database-management"
 

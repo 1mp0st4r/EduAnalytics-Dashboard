@@ -21,18 +21,18 @@ export async function GET(request: NextRequest) {
       const testResult = await testPool.query('SELECT NOW()');
       console.log("[API] Direct connection test successful:", testResult.rows[0]);
       await testPool.end();
-    } catch (directError) {
-      console.error("[API] Direct connection test failed:", directError.message);
-      await testPool.end();
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: "Direct database connection failed",
-          error: directError.message
-        }, 
-        { status: 500 }
-      );
-    }
+  } catch (directError: any) {
+    console.error("[API] Direct connection test failed:", directError.message);
+    await testPool.end();
+    return NextResponse.json(
+      { 
+        success: false, 
+        message: "Direct database connection failed",
+        error: directError.message
+      }, 
+      { status: 500 }
+    );
+  }
 
     // Test database connection
     const isConnected = await neonService.testConnection()

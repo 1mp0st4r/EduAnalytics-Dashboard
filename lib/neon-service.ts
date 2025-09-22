@@ -31,11 +31,11 @@ export class NeonService {
       
       console.log('✅ Neon PostgreSQL connection successful')
       return true
-    } catch (error) {
-      console.error('❌ Neon PostgreSQL connection failed:', error)
-      console.error('❌ Error details:', error.message)
-      return false
-    } finally {
+  } catch (error: any) {
+    console.error('❌ Neon PostgreSQL connection failed:', error)
+    console.error('❌ Error details:', error.message)
+    return false
+  } finally {
       await pool.end()
     }
   }
@@ -178,7 +178,7 @@ export class NeonService {
     const pool = await this.getConnection()
     try {
       const result = await pool.query(sql, [riskLevel, riskScore, dropoutProbability, studentId])
-      return result.rowCount > 0
+      return (result.rowCount || 0) > 0
     } catch (error) {
       console.error('Error updating student risk:', error)
       throw error
@@ -258,7 +258,7 @@ export class NeonService {
         modelVersion,
         JSON.stringify(inputFeatures),
       ])
-      return result.rowCount > 0
+      return (result.rowCount || 0) > 0
     } catch (error) {
       console.error('Error creating AI prediction:', error)
       throw error

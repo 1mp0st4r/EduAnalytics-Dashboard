@@ -45,7 +45,7 @@ export async function PUT(
       )
     }
 
-    const updated = await dbService.updateStudentRisk(
+    const updated = await neonService.updateStudentRisk(
       params.id,
       riskLevel,
       riskScore,

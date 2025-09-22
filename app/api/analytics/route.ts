@@ -32,16 +32,17 @@ export async function GET(request: NextRequest) {
         })
 
       case 'risk-analysis':
-        const allStudents = await dbService.getStudents({ limit: 1000 })
+        const allStudents = await neonService.getStudents({ limit: 1000 })
+        const statsForRiskAnalysis = await neonService.getStudentStatistics()
         const riskAnalysis = {
           totalStudents: allStudents.length,
-          dropoutRate: (stats.dropoutStudents / stats.totalStudents) * 100,
-          avgRiskScore: allStudents.reduce((sum, s) => sum + s.RiskScore, 0) / allStudents.length,
+          dropoutRate: (statsForRiskAnalysis.dropoutStudents / statsForRiskAnalysis.totalStudents) * 100,
+          avgRiskScore: allStudents.reduce((sum: number, s: any) => sum + s.RiskScore, 0) / allStudents.length,
           riskFactors: {
-            lowAttendance: allStudents.filter(s => s.AvgAttendance_LatestTerm < 70).length,
-            poorPerformance: allStudents.filter(s => s.AvgMarks_LatestTerm < 50).length,
-            ruralStudents: allStudents.filter(s => s.IsRural).length,
-            firstGeneration: allStudents.filter(s => s.IsFirstGenerationLearner).length
+            lowAttendance: allStudents.filter((s: any) => s.AvgAttendance_LatestTerm < 70).length,
+            poorPerformance: allStudents.filter((s: any) => s.AvgMarks_LatestTerm < 50).length,
+            ruralStudents: allStudents.filter((s: any) => s.IsRural).length,
+            firstGeneration: allStudents.filter((s: any) => s.IsFirstGenerationLearner).length
           }
         }
         

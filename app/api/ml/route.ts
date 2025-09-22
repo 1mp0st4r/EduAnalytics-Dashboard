@@ -191,7 +191,7 @@ async function callPythonMLService(student: any) {
 
     const data = await response.json()
     return { success: true, data }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Python ML service call failed:', error)
     return { success: false, error: error.message }
   }
