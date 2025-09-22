@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import LoginForm from "../components/auth/login-form"
+import LoginForm from "@/components/auth/login-form"
 import SignUpForm from "@/components/auth/signup-form"
 import StudentDashboard from "@/components/dashboard/student-dashboard"
 import AdminDashboard from "@/components/dashboard/admin-dashboard"

@@ -2,8 +2,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
-import StudentAnalyzer from "../../components/ai/student-analyzer"
-import PredictiveAnalytics from "../../components/ai/predictive-analytics"
+import StudentAnalyzer from "@/components/ai/student-analyzer"
+import PredictiveAnalytics from "@/components/ai/predictive-analytics"
 
 export default function AIAnalyticsPage() {
   // Mock student data for demonstration
