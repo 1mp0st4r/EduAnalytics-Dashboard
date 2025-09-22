@@ -25,6 +25,7 @@ import {
   Shield
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { RiskExplanationModal } from "@/components/risk-explanation-modal"
 
 interface Student {
   id: string
@@ -72,6 +73,8 @@ export default function AIAnalyticsPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [selectedStudentForRisk, setSelectedStudentForRisk] = useState<Student | null>(null)
+  const [isRiskExplanationOpen, setIsRiskExplanationOpen] = useState(false)
 
   useEffect(() => {
     fetchAnalyticsData()
@@ -100,6 +103,11 @@ export default function AIAnalyticsPage() {
     setIsRefreshing(true)
     await fetchAnalyticsData()
     setIsRefreshing(false)
+  }
+
+  const handleViewRiskExplanation = (student: Student) => {
+    setSelectedStudentForRisk(student)
+    setIsRiskExplanationOpen(true)
   }
 
   const getRiskColor = (riskLevel: string) => {
@@ -303,11 +311,10 @@ export default function AIAnalyticsPage() {
                     {analyticsData.highRiskStudents.map((student) => (
                       <div
                         key={student.id}
-                        className={`p-4 border rounded-lg cursor-pointer hover:shadow-md transition-shadow ${getRiskColor(student.RiskLevel)}`}
-                        onClick={() => setSelectedStudent(student)}
+                        className={`p-4 border rounded-lg hover:shadow-md transition-shadow ${getRiskColor(student.RiskLevel)}`}
                       >
                         <div className="flex justify-between items-start">
-                          <div>
+                          <div className="flex-1">
                             <h3 className="font-semibold">{student.StudentName}</h3>
                             <p className="text-sm text-gray-600">{student.StudentID} • Class {student.StudentClass}</p>
                             <p className="text-sm mt-1">
@@ -316,10 +323,28 @@ export default function AIAnalyticsPage() {
                               Dropout Risk: {parseFloat(student.DropoutProbability).toFixed(1)}%
                             </p>
                           </div>
-                          <div className="text-right">
+                          <div className="flex items-center gap-2">
                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(student.RiskLevel)}`}>
                               {getRiskIcon(student.RiskLevel)} {student.RiskLevel}
                             </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewRiskExplanation(student)}
+                              className="h-8 px-3"
+                            >
+                              <AlertTriangle className="w-3 h-3 mr-1" />
+                              Why?
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedStudent(student)}
+                              className="h-8 px-3"
+                            >
+                              <Eye className="w-3 h-3 mr-1" />
+                              View
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -410,6 +435,18 @@ export default function AIAnalyticsPage() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Risk Explanation Modal */}
+          {selectedStudentForRisk && (
+            <RiskExplanationModal
+              student={selectedStudentForRisk}
+              isOpen={isRiskExplanationOpen}
+              onClose={() => {
+                setIsRiskExplanationOpen(false)
+                setSelectedStudentForRisk(null)
+              }}
+            />
           )}
         </main>
       </div>

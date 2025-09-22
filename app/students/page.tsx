@@ -38,6 +38,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { RiskExplanationModal } from "@/components/risk-explanation-modal"
 
 interface Student {
   id: string
@@ -68,6 +69,8 @@ export default function StudentsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [studentsPerPage] = useState(20)
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false)
+  const [selectedStudentForRisk, setSelectedStudentForRisk] = useState<Student | null>(null)
+  const [isRiskExplanationOpen, setIsRiskExplanationOpen] = useState(false)
   const [newStudent, setNewStudent] = useState({
     studentId: "",
     fullName: "",
@@ -219,6 +222,11 @@ export default function StudentsPage() {
     } catch (err: any) {
       alert('Failed to export students: ' + err.message)
     }
+  }
+
+  const handleViewRiskExplanation = (student: Student) => {
+    setSelectedStudentForRisk(student)
+    setIsRiskExplanationOpen(true)
   }
 
   const getRiskColor = (riskLevel: string) => {
@@ -625,6 +633,7 @@ export default function StudentsPage() {
                                       size="sm" 
                                       className="h-8 w-8 p-0"
                                       onClick={() => window.open(`/students/${student.id}`, '_blank')}
+                                      title="View Details"
                                     >
                                       <Eye className="w-4 h-4" />
                                     </Button>
@@ -632,14 +641,30 @@ export default function StudentsPage() {
                                       variant="ghost" 
                                       size="sm" 
                                       className="h-8 w-8 p-0"
+                                      onClick={() => handleViewRiskExplanation(student)}
+                                      title="View Risk Explanation"
+                                    >
+                                      <AlertTriangle className="w-4 h-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="h-8 w-8 p-0"
                                       onClick={() => window.open(`/students/${student.id}`, '_blank')}
+                                      title="Edit Student"
                                     >
                                       <Edit className="w-4 h-4" />
                                     </Button>
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="h-8 w-8 p-0"
+                                      onClick={() => window.open(`mailto:${student.ContactEmail}`, '_blank')}
+                                      title="Send Email"
+                                    >
                                       <Mail className="w-4 h-4" />
                                     </Button>
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="More Options">
                                       <MoreHorizontal className="w-4 h-4" />
                                     </Button>
                                   </div>
@@ -697,6 +722,18 @@ export default function StudentsPage() {
           )}
         </main>
       </div>
+
+      {/* Risk Explanation Modal */}
+      {selectedStudentForRisk && (
+        <RiskExplanationModal
+          student={selectedStudentForRisk}
+          isOpen={isRiskExplanationOpen}
+          onClose={() => {
+            setIsRiskExplanationOpen(false)
+            setSelectedStudentForRisk(null)
+          }}
+        />
+      )}
     </div>
   )
 }
