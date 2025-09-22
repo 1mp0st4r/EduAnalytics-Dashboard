@@ -113,6 +113,12 @@ export default function Home() {
     }
   }
 
+  // Redirect to login page if not authenticated
+  if (authState === "login") {
+    window.location.href = '/login'
+    return null
+  }
+
   const handleSignUp = () => {
     setAuthState("signup")
   }
