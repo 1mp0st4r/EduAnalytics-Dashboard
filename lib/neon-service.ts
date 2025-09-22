@@ -31,11 +31,11 @@ export class NeonService {
       
       console.log('✅ Neon PostgreSQL connection successful')
       return true
-  } catch (error: any) {
-    console.error('❌ Neon PostgreSQL connection failed:', error)
-    console.error('❌ Error details:', error.message)
-    return false
-  } finally {
+    } catch (error: any) {
+      console.error('❌ Neon PostgreSQL connection failed:', error)
+      console.error('❌ Error details:', error.message)
+      return false
+    } finally {
       await pool.end()
     }
   }
