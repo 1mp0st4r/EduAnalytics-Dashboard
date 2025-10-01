@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/eduanalytics
+      - ML_SERVICE_URL=http://ml-service:8001
+      - RASA_URL=http://rasa-service:5005
+      - JWT_SECRET=your-super-secret-jwt-key
+      - EMAIL_API_KEY=your-gmail-app-password
+    depends_on:
+      - db
+      - ml-service
+      - rasa-service
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=eduanalytics
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # ML Service
+  ml-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.ml
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
+    command: python ml_api.py
+
+  # Rasa Service
+  rasa-service:
+    build:
+      context: ./rasa-bot
+      dockerfile: Dockerfile
+    ports:
+      - "5005:5005"
+    volumes:
+      - ./rasa-bot:/app
+    command: rasa run --port 5005 --enable-api --cors "*"
+
+  # Rasa Action Server
+  rasa-actions:
+    build:
+      context: ./rasa-bot
+      dockerfile: Dockerfile
+    ports:
+      - "5055:5055"
+    volumes:
+      - ./rasa-bot:/app
+    command: rasa run actions --port 5055
+
+volumes:
+  postgres_data:

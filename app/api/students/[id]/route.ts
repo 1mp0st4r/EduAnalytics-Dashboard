@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { neonService } from "../../../../lib/neon-service"
+import { validateStudentData, sanitizeObject, ValidationError, validateIntegerId } from "../../../../lib/validation"
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -49,7 +50,7 @@ export async function PUT(
 ) {
   try {
     const studentId = params.id
-    const updateData = await request.json()
+    const rawUpdateData = await request.json()
 
     if (!studentId) {
       return NextResponse.json(
@@ -58,19 +59,33 @@ export async function PUT(
       )
     }
 
-    // For now, we'll just return the updated data
-    // In a real implementation, you would update the database
-    const student = await neonService.getStudentById(studentId)
+    // Sanitize input data
+    const updateData = sanitizeObject(rawUpdateData)
+    
+    // Validate update data (only validate provided fields)
+    const validation = validateStudentData(updateData)
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { success: false, error: "Validation failed", details: validation.errors },
+        { status: 400 }
+      )
+    }
 
-    if (!student) {
+    // Check if student exists
+    const existingStudent = await neonService.getStudentById(studentId)
+    if (!existingStudent) {
       return NextResponse.json(
         { success: false, error: "Student not found" },
         { status: 404 }
       )
     }
 
-    // Merge the update data with existing student data
-    const updatedStudent = { ...student, ...updateData }
+    // Update student in database
+    const updatedStudent = await neonService.updateStudent(studentId, updateData)
+
+    if (!updatedStudent) {
+      throw new Error('Failed to update student in database')
+    }
 
     return NextResponse.json({
       success: true,
@@ -80,6 +95,14 @@ export async function PUT(
 
   } catch (error) {
     console.error("[API] Error updating student:", error)
+    
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { success: false, error: "Validation failed", details: error.errors },
+        { status: 400 }
+      )
+    }
+    
     return NextResponse.json(
       { success: false, error: "Failed to update student" },
       { status: 500 }
@@ -94,6 +117,8 @@ export async function DELETE(
 ) {
   try {
     const studentId = params.id
+    const { searchParams } = new URL(request.url)
+    const hardDelete = searchParams.get('hard') === 'true'
 
     if (!studentId) {
       return NextResponse.json(
@@ -102,11 +127,27 @@ export async function DELETE(
       )
     }
 
-    // For now, we'll just return success
-    // In a real implementation, you would delete from the database
+    // Check if student exists
+    const existingStudent = await neonService.getStudentById(studentId)
+    if (!existingStudent) {
+      return NextResponse.json(
+        { success: false, error: "Student not found" },
+        { status: 404 }
+      )
+    }
+
+    // Delete student from database
+    const deleted = hardDelete 
+      ? await neonService.hardDeleteStudent(studentId)
+      : await neonService.deleteStudent(studentId)
+
+    if (!deleted) {
+      throw new Error('Failed to delete student from database')
+    }
+
     return NextResponse.json({
       success: true,
-      message: "Student deleted successfully"
+      message: hardDelete ? "Student permanently deleted" : "Student deleted successfully"
     })
 
   } catch (error) {

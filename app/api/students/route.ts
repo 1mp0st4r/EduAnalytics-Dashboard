@@ -1,83 +1,126 @@
 import { NextRequest, NextResponse } from "next/server"
 import { neonService } from "../../../lib/neon-service"
+import { validateStudentData, validatePagination, sanitizeObject, ValidationError } from "../../../lib/validation"
+import { withErrorHandler, handleValidationError, handleDatabaseError, ConflictError, NotFoundError } from "../../../lib/error-handler"
+import { logger } from "../../../lib/logger"
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
 
 // Get all students with filters
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 100
-    const offset = searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : 0
-    const riskLevel = searchParams.get('riskLevel')
-    const classLevel = searchParams.get('classLevel')
-    const isDropout = searchParams.get('isDropout') === 'true'
+export const GET = withErrorHandler(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url)
+  const limit = searchParams.get('limit')
+  const offset = searchParams.get('offset')
+  const riskLevel = searchParams.get('riskLevel')
+  const classLevel = searchParams.get('classLevel')
+  const isDropout = searchParams.get('isDropout') === 'true'
 
+  // Validate pagination parameters
+  const paginationValidation = validatePagination(limit || undefined, offset || undefined)
+  if (!paginationValidation.isValid) {
+    throw handleValidationError(paginationValidation.errors)
+  }
+
+  const limitNum = limit ? parseInt(limit) : 100
+  const offsetNum = offset ? parseInt(offset) : 0
+
+  // Validate risk level if provided
+  if (riskLevel && !['Low', 'Medium', 'High', 'Critical'].includes(riskLevel)) {
+    throw handleValidationError(['Invalid risk level. Must be Low, Medium, High, or Critical'])
+  }
+
+  // Validate class level if provided
+  if (classLevel) {
+    const classLevelNum = parseInt(classLevel)
+    if (isNaN(classLevelNum) || classLevelNum < 1 || classLevelNum > 12) {
+      throw handleValidationError(['Invalid class level. Must be between 1 and 12'])
+    }
+  }
+
+  try {
     const students = await neonService.getStudents({
-      limit,
-      offset,
+      limit: limitNum,
+      offset: offsetNum,
       riskLevel: riskLevel || undefined,
       classLevel: classLevel || undefined,
       isDropout: isDropout || undefined
+    })
+
+    logger.info(`Fetched ${students.length} students`, 'STUDENT', {
+      limit: limitNum,
+      offset: offsetNum,
+      riskLevel,
+      classLevel,
+      isDropout
     })
 
     return NextResponse.json({
       success: true,
       data: students,
       pagination: {
-        limit,
-        offset,
+        limit: limitNum,
+        offset: offsetNum,
         total: students.length
       }
     })
   } catch (error) {
-    console.error("[API] Error fetching students:", error)
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch students" },
-      { status: 500 }
-    )
+    throw handleDatabaseError(error, 'fetch students')
   }
-}
+})
 
 // Add new student
-export async function POST(request: NextRequest) {
+export const POST = withErrorHandler(async (request: NextRequest) => {
+  const rawStudentData = await request.json()
+  
+  // Sanitize input data
+  const studentData = sanitizeObject(rawStudentData)
+  
+  // Validate student data
+  const validation = validateStudentData(studentData)
+  if (!validation.isValid) {
+    throw handleValidationError(validation.errors)
+  }
+
   try {
-    const studentData = await request.json()
-    
-    // Validate required fields
-    if (!studentData.fullName || !studentData.studentId) {
-      return NextResponse.json(
-        { success: false, error: "Full name and student ID are required" },
-        { status: 400 }
-      )
+    // Check if student ID already exists
+    const existingStudent = await neonService.getStudentById(studentData.studentId)
+    if (existingStudent) {
+      throw new ConflictError("Student with this ID already exists")
     }
 
-    // For now, we'll create a simple student record
-    // In a real implementation, you'd insert into the database
-    const newStudent = {
-      id: `student_${Date.now()}`,
-      student_id: studentData.studentId,
-      full_name: studentData.fullName,
-      email: studentData.email || '',
-      phone: studentData.phone || '',
-      gender: studentData.gender || 'Other',
-      class_level: studentData.classLevel || 10,
-      current_attendance: studentData.attendance || 0,
-      current_performance: studentData.performance || 0,
-      risk_level: studentData.riskLevel || 'Low',
-      risk_score: studentData.riskScore || 0,
-      dropout_probability: studentData.dropoutProbability || 0,
-      is_dropout: false,
-      is_active: true,
-      created_at: new Date().toISOString()
+    // Create student in database
+    const newStudent = await neonService.createStudent({
+      studentId: studentData.studentId,
+      fullName: studentData.fullName,
+      email: studentData.email,
+      phone: studentData.phone,
+      gender: studentData.gender,
+      classLevel: studentData.classLevel || 10,
+      schoolId: studentData.schoolId,
+      mentorId: studentData.mentorId,
+      parentName: studentData.parentName,
+      parentPhone: studentData.parentPhone,
+      parentEmail: studentData.parentEmail,
+      address: studentData.address,
+      district: studentData.district,
+      state: studentData.state,
+      attendance: studentData.attendance,
+      performance: studentData.performance,
+      riskLevel: studentData.riskLevel,
+      riskScore: studentData.riskScore,
+      dropoutProbability: studentData.dropoutProbability
+    })
+
+    if (!newStudent) {
+      throw new Error('Failed to create student in database')
     }
 
-    // In a real implementation, you would:
-    // 1. Create a user record
-    // 2. Create a student record linked to the user
-    // 3. Assign a random mentor
-    // 4. Link to a school
+    logger.studentAction('CREATE', studentData.studentId, {
+      fullName: studentData.fullName,
+      classLevel: studentData.classLevel,
+      riskLevel: studentData.riskLevel
+    })
 
     return NextResponse.json({
       success: true,
@@ -85,10 +128,9 @@ export async function POST(request: NextRequest) {
       message: "Student added successfully"
     })
   } catch (error) {
-    console.error("[API] Error adding student:", error)
-    return NextResponse.json(
-      { success: false, error: "Failed to add student" },
-      { status: 500 }
-    )
+    if (error instanceof ConflictError) {
+      throw error
+    }
+    throw handleDatabaseError(error, 'create student')
   }
-}
+})

@@ -50,8 +50,8 @@ const enrollmentTrends = [
   { semester: "Fall 2022", enrolled: 1180, graduated: 245, dropped: 89, retained: 846 },
   { semester: "Spring 2023", enrolled: 1205, graduated: 198, dropped: 76, retained: 931 },
   { semester: "Fall 2023", enrolled: 1247, graduated: 0, dropped: 67, retained: 1180 },
-  { semester: "Spring 2024", enrolled: 1289, graduated: 287, dropped: 54, retained: 948 },
-  { semester: "Fall 2024", enrolled: 1247, graduated: 0, dropped: 43, retained: 1204 },
+  { semester: "Spring 2025", enrolled: 1289, graduated: 287, dropped: 54, retained: 948 },
+  { semester: "Fall 2025", enrolled: 1247, graduated: 0, dropped: 43, retained: 1204 },
 ]
 
 const programPerformance = [

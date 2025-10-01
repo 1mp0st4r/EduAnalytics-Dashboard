@@ -1,0 +1,98 @@
+version: "3.1"
+
+stories:
+
+- story: greet and ask attendance
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: ask_attendance
+  - action: StudentInfoAction
+  - action: utter_attendance_info
+
+- story: greet and ask performance
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: ask_performance
+  - action: StudentInfoAction
+  - action: utter_performance_info
+
+- story: greet and ask risk level
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: ask_risk_level
+  - action: StudentInfoAction
+  - action: utter_risk_level_info
+
+- story: ask mentor information
+  steps:
+  - intent: ask_mentor
+  - action: StudentInfoAction
+  - action: utter_mentor_info
+
+- story: request study tips
+  steps:
+  - intent: ask_study_tips
+  - action: StudyTipsAction
+  - action: utter_study_tips
+
+- story: request help
+  steps:
+  - intent: ask_help
+  - action: utter_help
+
+- story: report issue
+  steps:
+  - intent: report_issue
+  - action: IssueReportAction
+  - action: utter_help
+
+- story: ask for motivation
+  steps:
+  - intent: ask_motivation
+  - action: MotivationAction
+  - action: utter_motivation
+
+- story: bot challenge
+  steps:
+  - intent: bot_challenge
+  - action: utter_iamabot
+
+- story: goodbye
+  steps:
+  - intent: goodbye
+  - action: utter_goodbye
+
+- story: happy mood
+  steps:
+  - intent: mood_great
+  - action: utter_motivation
+
+- story: unhappy mood
+  steps:
+  - intent: mood_unhappy
+  - action: utter_motivation
+
+- story: ask subjects
+  steps:
+  - intent: ask_subjects
+  - action: StudentInfoAction
+  - action: utter_help
+
+- story: ask exams
+  steps:
+  - intent: ask_exams
+  - action: StudentInfoAction
+  - action: utter_help
+
+- story: ask future
+  steps:
+  - intent: ask_future
+  - action: utter_motivation
+
+- story: ask support
+  steps:
+  - intent: ask_support
+  - action: utter_mentor_info

@@ -1,0 +1,108 @@
+version: "3.1"
+
+intents:
+  - greet
+  - goodbye
+  - affirm
+  - deny
+  - mood_great
+  - mood_unhappy
+  - bot_challenge
+  - ask_attendance
+  - ask_performance
+  - ask_risk_level
+  - ask_mentor
+  - ask_study_tips
+  - ask_help
+  - report_issue
+  - ask_schedule
+  - ask_motivation
+  - ask_subjects
+  - ask_exams
+  - ask_future
+  - ask_support
+
+entities:
+  - subject
+  - issue_type
+  - severity
+  - student_id
+
+slots:
+  student_name:
+    type: text
+    mappings:
+    - type: from_entity
+      entity: student_name
+  student_class:
+    type: text
+  attendance:
+    type: float
+  performance:
+    type: float
+  risk_level:
+    type: categorical
+    values:
+    - low
+    - medium
+    - high
+    - critical
+  mentor_name:
+    type: text
+  school_name:
+    type: text
+
+responses:
+  utter_greet:
+  - text: "नमस्ते! मैं आपका AI स्टडी असिस्टेंट हूं। मैं आपकी पढ़ाई में मदद करने के लिए यहां हूं। आप मुझसे कुछ भी पूछ सकते हैं।"
+  - text: "Hello! I'm your AI study assistant. I'm here to help you with your studies. You can ask me anything about your academics, attendance, or any concerns you have."
+
+  utter_goodbye:
+  - text: "अच्छा दिन! यदि आपको किसी भी सहायता की आवश्यकता है, तो बस मुझसे बात करें।"
+  - text: "Have a great day! If you need any help, just talk to me."
+
+  utter_iamabot:
+  - text: "हां, मैं एक AI असिस्टेंट हूं। लेकिन मैं आपकी पढ़ाई में मदद करने के लिए यहां हूं।"
+  - text: "Yes, I am an AI assistant. But I'm here to help you with your studies."
+
+  utter_attendance_info:
+  - text: "आपकी वर्तमान उपस्थिति {attendance}% है। {attendance_message}"
+  - text: "Your current attendance is {attendance}%. {attendance_message}"
+
+  utter_performance_info:
+  - text: "आपका वर्तमान प्रदर्शन {performance}% है। {performance_message}"
+  - text: "Your current performance is {performance}%. {performance_message}"
+
+  utter_risk_level_info:
+  - text: "आपका वर्तमान जोखिम स्तर {risk_level} है। {risk_message}"
+  - text: "Your current risk level is {risk_level}. {risk_message}"
+
+  utter_mentor_info:
+  - text: "आपके मेंटर का नाम {mentor_name} है। आप उनसे संपर्क कर सकते हैं।"
+  - text: "Your mentor's name is {mentor_name}. You can contact them for support."
+
+  utter_study_tips:
+  - text: "यहां कुछ अध्ययन सुझाव हैं:\n1. नियमित अभ्यास करें\n2. समय सारणी बनाएं\n3. छोटे-छोटे ब्रेक लें\n4. समूह अध्ययन करें"
+  - text: "Here are some study tips:\n1. Practice regularly\n2. Create a schedule\n3. Take short breaks\n4. Study in groups"
+
+  utter_help:
+  - text: "मैं आपकी निम्नलिखित चीजों में मदद कर सकता हूं:\n- उपस्थिति जानकारी\n- प्रदर्शन रिपोर्ट\n- अध्ययन सुझाव\n- मेंटर संपर्क\n- समस्या रिपोर्टिंग"
+  - text: "I can help you with:\n- Attendance information\n- Performance reports\n- Study tips\n- Mentor contact\n- Issue reporting"
+
+  utter_motivation:
+  - text: "आप एक महान छात्र हैं! हर छोटी सफलता मायने रखती है। अपने लक्ष्यों पर केंद्रित रहें।"
+  - text: "You are a great student! Every small success matters. Stay focused on your goals."
+
+  utter_default:
+  - text: "मुझे खेद है, मैं समझ नहीं पाया। क्या आप दोबारा पूछ सकते हैं?"
+  - text: "I'm sorry, I didn't understand. Could you please ask again?"
+
+actions:
+  - actions.StudentInfoAction
+  - actions.IssueReportAction
+  - actions.StudyTipsAction
+  - actions.MotivationAction
+
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true

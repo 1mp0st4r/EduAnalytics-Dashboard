@@ -91,7 +91,7 @@ export default function StudentsPage() {
     setError(null)
     try {
       console.log('🔄 Fetching students...')
-      const response = await fetch('/api/students?limit=1000')
+      const response = await fetch('/api/students?limit=10000')
       const data = await response.json()
       console.log('📊 Students response:', data)
       if (data.success) {
@@ -272,6 +272,14 @@ export default function StudentsPage() {
       <div className="lg:pl-80">
         <Header 
           onRefresh={fetchStudents}
+          onLogout={() => {
+            // Clear authentication state
+            localStorage.removeItem('isLoggedIn')
+            localStorage.removeItem('userType')
+            localStorage.removeItem('userEmail')
+            // Redirect to home page
+            window.location.href = '/'
+          }}
           notificationCount={riskStats.high + riskStats.critical}
           isLoading={loading}
         />
@@ -636,7 +644,7 @@ export default function StudentsPage() {
                                       variant="ghost" 
                                       size="sm" 
                                       className="h-8 w-8 p-0"
-                                      onClick={() => window.open(`/students/${student.id}`, '_blank')}
+                                      onClick={() => window.open(`/students/${student.StudentID}`, '_blank')}
                                       title="View Details"
                                     >
                                       <Eye className="w-4 h-4" />
@@ -654,7 +662,7 @@ export default function StudentsPage() {
                                       variant="ghost" 
                                       size="sm" 
                                       className="h-8 w-8 p-0"
-                                      onClick={() => window.open(`/students/${student.id}`, '_blank')}
+                                      onClick={() => window.open(`/students/${student.StudentID}`, '_blank')}
                                       title="Edit Student"
                                     >
                                       <Edit className="w-4 h-4" />

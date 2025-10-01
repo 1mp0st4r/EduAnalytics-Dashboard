@@ -28,7 +28,7 @@ export default function EmailDashboard() {
     monthlyReportsSent: 1180,
     riskAlertsSent: 89,
     issueReportsSent: 156,
-    lastSentDate: "2024-01-15",
+    lastSentDate: "2025-01-15",
   }
 
   const handleSendMonthlyReports = async () => {
@@ -372,25 +372,25 @@ export default function EmailDashboard() {
                   {
                     type: "मासिक रिपोर्ट / Monthly Report",
                     count: 1180,
-                    date: "2024-01-15",
+                    date: "2025-01-15",
                     status: "completed",
                   },
                   {
                     type: "जोखिम अलर्ट / Risk Alert",
                     count: 89,
-                    date: "2024-01-14",
+                    date: "2025-01-14",
                     status: "completed",
                   },
                   {
                     type: "समस्या रिपोर्ट / Issue Report",
                     count: 12,
-                    date: "2024-01-13",
+                    date: "2025-01-13",
                     status: "completed",
                   },
                   {
                     type: "उपस्थिति चेतावनी / Attendance Warning",
                     count: 45,
-                    date: "2024-01-12",
+                    date: "2025-01-12",
                     status: "completed",
                   },
                 ].map((item, index) => (

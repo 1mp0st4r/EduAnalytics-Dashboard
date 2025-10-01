@@ -29,12 +29,22 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "db:init": "node scripts/setup-database.js",
     "db:setup": "node scripts/04-import-csv-data.js",
     "db:test": "node -e \"require('./lib/database-service').dbService.testConnection()\"",
+    "db:backup": "node scripts/backup-database.js create",
+    "db:restore": "node scripts/backup-database.js restore",
+    "db:list": "node scripts/backup-database.js list",
     "setup": "npm run db:init && npm run db:setup",
     "neon:setup": "node scripts/setup-neon.js",
-    "neon:test": "node -e \"require('./lib/neon-service').neonService.testConnection()\""
+    "neon:test": "node -e \"require('./lib/neon-service').neonService.testConnection()\"",
+    "migrate": "node scripts/run-migrations.js",
+    "health": "curl http://localhost:3000/api/health",
+    "deploy": "vercel --prod",
+    "deploy:preview": "vercel"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -65,6 +75,8 @@
     "@radix-ui/react-toggle": "1.1.1",
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.18.6",
     "@types/nodemailer": "^7.0.1",
     "@types/pg": "^8.15.5",
@@ -72,6 +84,7 @@
     "@types/react-dom": "^18",
     "@vercel/analytics": "latest",
     "autoprefixer": "^10.4.20",
+    "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
@@ -81,6 +94,7 @@
     "embla-carousel-react": "8.5.1",
     "geist": "latest",
     "input-otp": "1.4.1",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.454.0",
     "mysql2": "latest",
     "next": "^14.2.32",
@@ -100,6 +114,33 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.9.2",
     "vaul": "^0.9.6",
-    "zod": "^3.24.1"
+    "zod": "^3.24.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "ts-jest": "^29.2.5"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"],
+    "moduleNameMapping": {
+      "^@/(.*)$": "<rootDir>/$1"
+    },
+    "testMatch": [
+      "**/__tests__/**/*.(ts|tsx|js)",
+      "**/*.(test|spec).(ts|tsx|js)"
+    ],
+    "collectCoverageFrom": [
+      "app/**/*.{ts,tsx}",
+      "components/**/*.{ts,tsx}",
+      "lib/**/*.{ts,tsx}",
+      "!**/*.d.ts",
+      "!**/node_modules/**"
+    ]
   }
 }

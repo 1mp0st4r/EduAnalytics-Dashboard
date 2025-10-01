@@ -2,11 +2,13 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { useAuth } from "@/lib/auth-context"
+import { useLanguage } from "@/lib/language-context"
 import { 
   GraduationCap, 
   BarChart3, 
@@ -25,39 +27,39 @@ import {
   LogOut
 } from "lucide-react"
 
-const navigation = [
+const getNavigation = (t: (key: string) => string) => [
   {
-    name: "Dashboard",
+    name: t('nav.dashboard'),
     href: "/",
     icon: BarChart3,
     description: "Overview and analytics"
   },
   {
-    name: "Students",
+    name: t('nav.students'),
     href: "/students",
     icon: Users,
     description: "Student management"
   },
   {
-    name: "AI Analytics",
+    name: t('nav.analytics'),
     href: "/ai-analytics",
     icon: Brain,
     description: "AI-powered insights"
   },
   {
-    name: "Reports",
+    name: t('nav.reports'),
     href: "/reports",
     icon: FileText,
     description: "Generate reports"
   },
   {
-    name: "Notifications",
+    name: t('nav.notifications'),
     href: "/notifications",
     icon: Bell,
     description: "Alerts and messages"
   },
   {
-    name: "Settings",
+    name: t('nav.settings'),
     href: "/settings",
     icon: Settings,
     description: "System configuration"
@@ -85,6 +87,8 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
+  const { logout } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
 
   return (
@@ -112,6 +116,9 @@ export function Sidebar({ className }: SidebarProps) {
 }
 
 function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+  const { t } = useLanguage()
+  const navigation = getNavigation(t)
+  
   return (
     <div className="flex flex-col h-full bg-white border-r border-slate-200">
       {/* Header */}
@@ -191,12 +198,8 @@ function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate
           size="sm"
           className="w-full"
           onClick={() => {
-            // Clear login state from localStorage
-            localStorage.removeItem('isLoggedIn')
-            localStorage.removeItem('userType')
-            localStorage.removeItem('userEmail')
-            // Redirect to home
-            window.location.href = '/'
+            logout()
+            router.push('/')
           }}
         >
           <LogOut className="w-4 h-4 mr-2" />

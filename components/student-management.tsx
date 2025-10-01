@@ -31,6 +31,7 @@ import {
 } from "lucide-react"
 import type { StudentAnalytics } from "@/lib/database-types"
 
+// Real student data will be fetched from API
 const mockStudents: StudentAnalytics[] = [
   {
     StudentID: "A-2025-101",
@@ -125,7 +126,9 @@ const mockStudents: StudentAnalytics[] = [
 ]
 
 export default function StudentManagement() {
-  const [students, setStudents] = useState<StudentAnalytics[]>(mockStudents)
+  const [students, setStudents] = useState<StudentAnalytics[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selectedStudent, setSelectedStudent] = useState<StudentAnalytics | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterAccommodation, setFilterAccommodation] = useState("all")
@@ -133,6 +136,48 @@ export default function StudentManagement() {
   const [filterCaste, setFilterCaste] = useState("all")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+
+  // Fetch real student data from API
+  useEffect(() => {
+    fetchStudents()
+  }, [])
+
+  const fetchStudents = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch('/api/students?limit=1000')
+      const data = await response.json()
+      
+      if (data.success && data.data) {
+        setStudents(data.data)
+      } else {
+        // Fallback to obviously fake data if API fails
+        console.warn('API failed, using clearly marked fallback data')
+        const fallbackStudents = mockStudents.map((student, index) => ({
+          ...student,
+          StudentID: `[DEMO_DATA] ${student.StudentID}`,
+          StudentName: `Demo Student ${index + 1}`,
+          _isFallbackData: true
+        }))
+        setStudents(fallbackStudents)
+      }
+    } catch (err) {
+      console.error('Error fetching students:', err)
+      setError('Failed to fetch student data')
+      // Fallback to obviously fake data
+      const fallbackStudents = mockStudents.map((student, index) => ({
+        ...student,
+        StudentID: `[DEMO_DATA] ${student.StudentID}`,
+        StudentName: `Demo Student ${index + 1}`,
+        _isFallbackData: true
+      }))
+      setStudents(fallbackStudents)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredStudents = students.filter((student) => {
     const matchesSearch = student.StudentID.toLowerCase().includes(searchTerm.toLowerCase())
@@ -162,13 +207,54 @@ export default function StudentManagement() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Student Management</h2>
+            <p className="text-gray-600">Loading student data...</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-32 bg-gray-200 animate-pulse rounded-lg"></div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (error && students.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Student Management</h2>
+            <p className="text-gray-600">Error loading student data</p>
+          </div>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">Error: {error}</p>
+          <Button onClick={fetchStudents} variant="outline" className="mt-2">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Student Management</h2>
-          <p className="text-gray-600">Manage student records, profiles, and risk assessment data</p>
+          <p className="text-gray-600">
+            Manage student records, profiles, and risk assessment data
+            {students.some(s => s._isFallbackData) && <span className="text-orange-600 ml-2 font-medium">(DEMO DATA ACTIVE)</span>}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
@@ -197,6 +283,22 @@ export default function StudentManagement() {
           </Dialog>
         </div>
       </div>
+
+      {/* Demo Data Warning Banner */}
+      {students.some(s => s._isFallbackData) && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <AlertTriangle className="h-5 w-5 text-orange-500 mr-2" />
+            <div>
+              <h4 className="text-orange-800 font-medium">⚠️ DEMO DATA ACTIVE</h4>
+              <p className="text-orange-600 text-sm mt-1">
+                Database connection failed. Showing demo data for demonstration purposes only.
+                Student IDs are prefixed with [DEMO_DATA] to indicate fallback status.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters and Search */}
       <Card>

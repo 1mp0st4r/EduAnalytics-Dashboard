@@ -29,13 +29,52 @@ interface StudentAnalyzerProps {
 export default function StudentAnalyzer({ studentData }: StudentAnalyzerProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysis, setAnalysis] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  // AI Analysis Algorithm - simulates ML model predictions
-  const analyzeStudent = () => {
+  // Real AI Analysis using ML service
+  const analyzeStudent = async () => {
     setIsAnalyzing(true)
+    setError(null)
 
-    // Simulate API call delay
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/risk-assessment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          studentData: studentData
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Transform API response to match component expectations
+        const riskFactors = transformToRiskFactors(data.data)
+        const recommendations = transformToRecommendations(data.data)
+        const interventions = transformToInterventions(data.data)
+
+        setAnalysis({
+          riskFactors,
+          dropoutProbability: data.data.dropoutProbability * 100,
+          recommendations,
+          interventions,
+          riskLevel: data.data.riskLevel.toLowerCase(),
+          modelVersion: data.data.modelVersion,
+          assessmentDate: data.data.assessmentDate,
+          fallback: data.data.fallback || false,
+          dataSource: data.data.dataSource,
+          warning: data.data.warning
+        })
+      } else {
+        throw new Error(data.error || 'Failed to analyze student')
+      }
+    } catch (err) {
+      console.error('Error analyzing student:', err)
+      setError(err instanceof Error ? err.message : 'Failed to analyze student')
+      
+      // Fallback to mock analysis
       const riskFactors = calculateRiskFactors(studentData)
       const dropoutProbability = calculateDropoutProbability(riskFactors)
       const recommendations = generateRecommendations(riskFactors, studentData)
@@ -47,9 +86,43 @@ export default function StudentAnalyzer({ studentData }: StudentAnalyzerProps) {
         recommendations,
         interventions,
         riskLevel: dropoutProbability > 70 ? "high" : dropoutProbability > 40 ? "medium" : "low",
+        fallback: true,
+        dataSource: 'FALLBACK_ALGORITHM',
+        warning: '⚠️ ANALYSIS FAILED - Using simplified algorithm'
       })
+    } finally {
       setIsAnalyzing(false)
-    }, 2000)
+    }
+  }
+
+  // Transform API response to component format
+  const transformToRiskFactors = (data: any) => {
+    return data.riskExplanation.map((explanation: any) => ({
+      factor: explanation.factor,
+      impact: explanation.impact.toLowerCase(),
+      description: explanation.description,
+      score: explanation.impact === 'High' ? 80 : explanation.impact === 'Medium' ? 60 : 40
+    }))
+  }
+
+  const transformToRecommendations = (data: any) => {
+    return data.riskExplanation.map((explanation: any) => ({
+      category: explanation.factor,
+      priority: explanation.impact.toLowerCase(),
+      description: explanation.recommendation,
+      timeline: explanation.impact === 'High' ? 'Immediate' : 'Within 2 weeks'
+    }))
+  }
+
+  const transformToInterventions = (data: any) => {
+    return data.interventions.map((intervention: any) => ({
+      type: intervention.type,
+      priority: intervention.priority.toLowerCase(),
+      title: intervention.title,
+      description: intervention.description,
+      timeline: intervention.timeline,
+      successRate: Math.round(70 + Math.random() * 20) // Mock success rate
+    }))
   }
 
   const calculateRiskFactors = (data: StudentData) => {
@@ -274,7 +347,7 @@ export default function StudentAnalyzer({ studentData }: StudentAnalyzerProps) {
         </CardHeader>
         <CardContent>
           {!analysis ? (
-            <div className="text-center py-8">
+            <div className="text-center py-8 space-y-4">
               <Button onClick={analyzeStudent} disabled={isAnalyzing} size="lg" className="px-8">
                 {isAnalyzing ? (
                   <>
@@ -288,9 +361,37 @@ export default function StudentAnalyzer({ studentData }: StudentAnalyzerProps) {
                   </>
                 )}
               </Button>
+              
+              {/* Error Display */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-w-md mx-auto">
+                  <div className="flex items-center">
+                    <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
+                    <div>
+                      <h4 className="text-red-800 font-medium">Analysis Error</h4>
+                      <p className="text-red-600 text-sm mt-1">{error}</p>
+                      <p className="text-red-500 text-xs mt-1">Using fallback analysis for demonstration</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-6">
+              {/* Data Source Warning */}
+              {analysis.warning && (
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <AlertTriangle className="h-5 w-5 text-orange-500 mr-2" />
+                    <div>
+                      <h4 className="text-orange-800 font-medium">Demo Analysis Active</h4>
+                      <p className="text-orange-600 text-sm mt-1">{analysis.warning}</p>
+                      <p className="text-orange-500 text-xs mt-1">Data source: {analysis.dataSource}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Risk Assessment */}
               <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                 <div>

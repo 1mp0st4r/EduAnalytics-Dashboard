@@ -227,6 +227,46 @@ export class EmailService {
     return await this.sendEmail(notification)
   }
 
+  // Password reset email
+  async sendPasswordResetEmail(userEmail: string, resetLink: string, userName: string): Promise<boolean> {
+    const template = this.generatePasswordResetTemplate(userName, resetLink)
+    const recipients: EmailRecipient[] = [
+      {
+        email: userEmail,
+        name: userName,
+        type: "admin", // This will be used for styling
+      }
+    ]
+
+    const notification: EmailNotification = {
+      to: recipients,
+      template,
+      priority: "high",
+    }
+
+    return await this.sendEmail(notification)
+  }
+
+  // Email verification email
+  async sendEmailVerificationEmail(userEmail: string, verificationLink: string, userName: string): Promise<boolean> {
+    const template = this.generateEmailVerificationTemplate(userName, verificationLink)
+    const recipients: EmailRecipient[] = [
+      {
+        email: userEmail,
+        name: userName,
+        type: "admin", // This will be used for styling
+      }
+    ]
+
+    const notification: EmailNotification = {
+      to: recipients,
+      template,
+      priority: "medium",
+    }
+
+    return await this.sendEmail(notification)
+  }
+
   async sendBulkMonthlyReports(studentsData: any[]): Promise<{ sent: number; failed: number }> {
     let sent = 0
     let failed = 0
@@ -427,12 +467,85 @@ Contact mentor: ${studentData.mentor_phone}
     return { subject, textContent, htmlContent }
   }
 
+  private generatePasswordResetTemplate(userName: string, resetLink: string): EmailTemplate {
+    const subject = "Password Reset Request / पासवर्ड रीसेट अनुरोध"
+
+    const textContent = `Dear ${userName} / प्रिय ${userName},
+
+You have requested to reset your password for your EduAnalytics account.
+आपने अपने EduAnalytics खाते के लिए पासवर्ड रीसेट करने का अनुरोध किया है।
+
+🔐 Password Reset Instructions / पासवर्ड रीसेट निर्देश:
+
+1. Click the link below to reset your password:
+   नीचे दिए गए लिंक पर क्लिक करके अपना पासवर्ड रीसेट करें:
+
+   ${resetLink}
+
+2. This link will expire in 1 hour for security reasons.
+   सुरक्षा कारणों से यह लिंक 1 घंटे में समाप्त हो जाएगा।
+
+3. If you didn't request this password reset, please ignore this email.
+   यदि आपने यह पासवर्ड रीसेट नहीं मांगा है, तो कृपया इस ईमेल को नजरअंदाज करें।
+
+⚠️ Security Note / सुरक्षा नोट:
+Never share this link with anyone. Our team will never ask for your password.
+इस लिंक को किसी के साथ साझा न करें। हमारी टीम कभी भी आपका पासवर्ड नहीं मांगेगी।
+
+Thank you / धन्यवाद,
+EduAnalytics Team / एजुएनालिटिक्स टीम`
+
+    const htmlContent = this.generateHTMLTemplate(subject, textContent, { full_name: userName }, "password-reset")
+
+    return { subject, textContent, htmlContent }
+  }
+
+  private generateEmailVerificationTemplate(userName: string, verificationLink: string): EmailTemplate {
+    const subject = "Verify Your Email Address / अपना ईमेल पता सत्यापित करें"
+
+    const textContent = `Dear ${userName} / प्रिय ${userName},
+
+Welcome to EduAnalytics! Please verify your email address to complete your account setup.
+EduAnalytics में आपका स्वागत है! अपना खाता सेटअप पूरा करने के लिए कृपया अपना ईमेल पता सत्यापित करें।
+
+📧 Email Verification / ईमेल सत्यापन:
+
+1. Click the link below to verify your email address:
+   अपना ईमेल पता सत्यापित करने के लिए नीचे दिए गए लिंक पर क्लिक करें:
+
+   ${verificationLink}
+
+2. This link will expire in 24 hours.
+   यह लिंक 24 घंटे में समाप्त हो जाएगा।
+
+3. Once verified, you'll have full access to all features.
+   सत्यापित होने के बाद, आपको सभी सुविधाओं तक पूरी पहुंच मिल जाएगी।
+
+🎉 What's Next / आगे क्या:
+- Access your personalized dashboard
+- View student analytics and reports
+- Manage your account settings
+
+- अपना व्यक्तिगत डैशबोर्ड एक्सेस करें
+- छात्र एनालिटिक्स और रिपोर्ट देखें
+- अपनी खाता सेटिंग्स प्रबंधित करें
+
+Thank you for joining us / हमसे जुड़ने के लिए धन्यवाद,
+EduAnalytics Team / एजुएनालिटिक्स टीम`
+
+    const htmlContent = this.generateHTMLTemplate(subject, textContent, { full_name: userName }, "verification")
+
+    return { subject, textContent, htmlContent }
+  }
+
   private generateHTMLTemplate(subject: string, textContent: string, studentData: any, type: string): string {
     const colorScheme = {
       monthly: { primary: "#0891b2", secondary: "#f97316" },
       alert: { primary: "#dc2626", secondary: "#f97316" },
       issue: { primary: "#eab308", secondary: "#0891b2" },
       warning: { primary: "#f97316", secondary: "#0891b2" },
+      "password-reset": { primary: "#dc2626", secondary: "#f97316" },
+      verification: { primary: "#059669", secondary: "#0891b2" },
     }
 
     const colors = colorScheme[type as keyof typeof colorScheme] || colorScheme.monthly
@@ -455,22 +568,24 @@ Contact mentor: ${studentData.mentor_phone}
         .stat { text-align: center; padding: 10px; }
         .stat-value { font-size: 24px; font-weight: bold; color: ${colors.primary}; }
         .contact-info { background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0; }
+        .button { display: inline-block; background: ${colors.primary}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 15px 0; }
+        .button:hover { background: ${colors.secondary}; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>शिक्षा सहायक / EduSupport</h1>
+            <h1>EduAnalytics / एजुएनालिटिक्स</h1>
             <p>${subject}</p>
         </div>
         <div class="content">
-            ${textContent.replace(/\n/g, "<br>").replace(/📊|📅|⚠️|🎯|🏫|👤|📞|📧|🚨|🤝|📋|📝|📈/g, "")}
+            ${textContent.replace(/\n/g, "<br>").replace(/📊|📅|⚠️|🎯|🏫|👤|📞|📧|🚨|🤝|📋|📝|📈|🔐|📧|🎉/g, "")}
         </div>
         <div class="footer">
             <p>यह एक स्वचालित संदेश है। कृपया इसका उत्तर न दें।<br>
             This is an automated message. Please do not reply.</p>
-            <p>शिक्षा सहायक - छात्र सफलता के लिए आपका साथी<br>
-            EduSupport - Your partner for student success</p>
+            <p>EduAnalytics - Your partner for educational success<br>
+            एजुएनालिटिक्स - शैक्षिक सफलता के लिए आपका साथी</p>
         </div>
     </div>
 </body>

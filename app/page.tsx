@@ -15,6 +15,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { Sidebar } from "@/components/navigation/sidebar"
 import { Header } from "@/components/navigation/header"
+import { useAuth } from "@/lib/auth-context"
+import { useLanguage } from "@/lib/language-context"
+import { useRouter } from "next/navigation"
+import { LanguageToggle } from "@/components/ui/language-toggle"
 import { 
   Users, 
   AlertTriangle, 
@@ -37,7 +41,7 @@ import {
   FileText
 } from "lucide-react"
 
-type AuthState = "login" | "signup" | "student-dashboard" | "admin-dashboard"
+// AuthState is now handled by AuthContext
 
 interface Student {
   id: string
@@ -70,35 +74,30 @@ interface Statistics {
 }
 
 export default function Home() {
-  const [authState, setAuthState] = useState<AuthState>("login")
-  const [currentUser, setCurrentUser] = useState<any>(null)
+  const { user, isAuthenticated, logout, isLoading: authLoading } = useAuth()
+  const { t } = useLanguage()
+  const router = useRouter()
   const [students, setStudents] = useState<Student[]>([])
   const [statistics, setStatistics] = useState<Statistics | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Check for existing login state on component mount
+  // Handle authentication state changes
   useEffect(() => {
-    console.log('🔍 Checking login state on mount...')
-    const isLoggedIn = localStorage.getItem('isLoggedIn')
-    const userType = localStorage.getItem('userType')
+    if (authLoading) return // Wait for auth to load
     
-    console.log('🔍 Login state:', { isLoggedIn, userType })
-    
-    if (isLoggedIn === 'true' && userType) {
-      if (userType === 'admin') {
-        console.log('✅ Setting admin dashboard state and fetching data...')
-        setAuthState('admin-dashboard')
+    if (isAuthenticated && user) {
+      if (user.userType === 'admin') {
         fetchData()
-      } else if (userType === 'student') {
-        console.log('🔄 Redirecting to student dashboard...')
-        // Redirect to student dashboard
-        window.location.href = '/student-dashboard'
+      } else if (user.userType === 'student') {
+        router.push('/student-dashboard')
+      } else if (user.userType === 'mentor') {
+        router.push('/mentor-dashboard')
+      } else if (user.userType === 'parent') {
+        router.push('/parent-portal')
       }
-    } else {
-      console.log('❌ Not logged in, showing login page')
     }
-  }, [])
+  }, [isAuthenticated, user, authLoading, router])
 
   const fetchData = async () => {
     setLoading(true)
@@ -107,7 +106,7 @@ export default function Home() {
       console.log('🔄 Fetching data...')
       
       // Fetch students
-      const studentsResponse = await fetch('/api/students?limit=100')
+      const studentsResponse = await fetch('/api/students?limit=1000')
       const studentsData = await studentsResponse.json()
       console.log('📊 Students response:', studentsData)
       if (studentsData.success) {
@@ -135,64 +134,149 @@ export default function Home() {
     }
   }
 
-  const handleLogin = (userType: "student" | "admin", credentials: any) => {
-    setCurrentUser({ userType, ...credentials })
-    if (userType === "student") {
-      // Redirect to student dashboard
-      window.location.href = '/student-dashboard'
-    } else {
-      setAuthState("admin-dashboard")
-      fetchData()
-    }
-  }
-
   // If not authenticated, show landing page
-  if (authState === "login") {
+  if (!isAuthenticated || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md text-center">
-          {/* Logo and Title */}
-          <div className="mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl mb-6">
-              <GraduationCap className="w-10 h-10 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold text-slate-900 mb-2">EduAnalytics</h1>
-            <p className="text-slate-600 text-lg">Student Dropout Prevention System</p>
+        <div className="w-full max-w-6xl">
+          {/* Language Toggle */}
+          <div className="flex justify-end mb-8">
+            <LanguageToggle />
           </div>
+          
+          <div className="text-center mb-12">
+            {/* Logo and Title */}
+            <div className="mb-8">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl mb-6">
+                <GraduationCap className="w-10 h-10 text-white" />
+              </div>
+              <h1 className="text-4xl font-bold text-slate-900 mb-2">{t('landing.title')}</h1>
+              <p className="text-slate-600 text-lg">{t('landing.subtitle')}</p>
+              <p className="text-slate-500 text-sm mt-2">{t('landing.description')}</p>
+            </div>
 
-          <Card className="border-0 shadow-xl">
-            <CardContent className="p-8">
-              <h2 className="text-2xl font-semibold text-slate-900 mb-4">Welcome to EduAnalytics</h2>
-              <p className="text-slate-600 mb-6">
-                Access your personalized dashboard to track student progress, analyze risk factors, and prevent dropouts.
-              </p>
-              
+            {/* Main CTA */}
+            <div className="mb-12">
               <Button 
                 onClick={() => window.location.href = '/login'}
-                className="w-full h-12 text-lg"
+                className="h-12 text-lg px-8 mr-4"
                 size="lg"
               >
                 <User className="w-5 h-5 mr-2" />
-                Get Started
+                {t('landing.getStarted')}
               </Button>
-            </CardContent>
-          </Card>
+              <Button 
+                variant="outline"
+                className="h-12 text-lg px-8"
+                size="lg"
+              >
+                {t('landing.learnMore')}
+              </Button>
+            </div>
+          </div>
+
+          {/* Features Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <Brain className="w-6 h-6 text-blue-600" />
+                </div>
+                <CardTitle className="text-xl">{t('landing.predictiveAnalytics')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">{t('landing.predictiveAnalyticsDesc')}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                  <Users className="w-6 h-6 text-green-600" />
+                </div>
+                <CardTitle className="text-xl">{t('landing.studentManagement')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">{t('landing.studentManagementDesc')}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+                <CardTitle className="text-xl">{t('landing.realTimeAlerts')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">{t('landing.realTimeAlertsDesc')}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                  <FileText className="w-6 h-6 text-purple-600" />
+                </div>
+                <CardTitle className="text-xl">{t('landing.reporting')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">{t('landing.reportingDesc')}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                  <GraduationCap className="w-6 h-6 text-orange-600" />
+                </div>
+                <CardTitle className="text-xl">{t('landing.mentorSupport')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">{t('landing.mentorSupportDesc')}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+                  <BarChart3 className="w-6 h-6 text-indigo-600" />
+                </div>
+                <CardTitle className="text-xl">{t('landing.aiChatbot')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">{t('landing.aiChatbotDesc')}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Final CTA */}
+          <div className="text-center">
+            <Card className="border-0 shadow-xl max-w-2xl mx-auto">
+              <CardContent className="p-8">
+                <h2 className="text-2xl font-semibold text-slate-900 mb-4">{t('dashboard.welcome')}</h2>
+                <p className="text-slate-600 mb-6">
+                  {t('landing.description')}
+                </p>
+                
+                <Button 
+                  onClick={() => window.location.href = '/login'}
+                  className="w-full h-12 text-lg"
+                  size="lg"
+                >
+                  <User className="w-5 h-5 mr-2" />
+                  {t('landing.getStarted')}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     )
   }
 
 
-  const handleBackToLogin = () => {
-    // Clear login state from localStorage
-    localStorage.removeItem('isLoggedIn')
-    localStorage.removeItem('userType')
-    localStorage.removeItem('userEmail')
-    
-    setAuthState("login")
-    setStudents([])
-    setStatistics(null)
-  }
+  // Authentication is now handled by AuthContext
 
   const handleTestDatabase = async () => {
     try {
@@ -235,7 +319,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {authState === "admin-dashboard" && (
+      {isAuthenticated && user && user.userType === 'admin' && (
         <div className="min-h-screen bg-slate-50">
           <Sidebar />
           <div className="lg:pl-80">
@@ -243,6 +327,7 @@ export default function Home() {
               onRefresh={fetchData}
               onTestDatabase={handleTestDatabase}
               onTestEmail={handleTestEmail}
+              onLogout={logout}
               notificationCount={statistics?.highRiskStudents || 0}
               isLoading={loading}
             />
@@ -252,7 +337,7 @@ export default function Home() {
                 <div className="flex items-center justify-center py-12">
                   <div className="text-center space-y-4">
                     <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
-                    <p className="text-slate-600">Loading dashboard data...</p>
+                    <p className="text-slate-600">{t('common.loading')}</p>
                   </div>
                 </div>
               )}
@@ -268,8 +353,8 @@ export default function Home() {
 
               {/* Welcome Section */}
               <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome back, Admin!</h1>
-                <p className="text-slate-600">Here's what's happening with your students today.</p>
+                <h1 className="text-3xl font-bold text-slate-900 mb-2">{t('dashboard.welcome')}</h1>
+                <p className="text-slate-600">{t('dashboard.overview')}</p>
               </div>
 
               {statistics ? (
@@ -284,7 +369,7 @@ export default function Home() {
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-blue-600">Total Students</p>
+                            <p className="text-sm font-medium text-blue-600">{t('dashboard.totalStudents')}</p>
                             <p className="text-3xl font-bold text-blue-900">{statistics.totalStudents}</p>
                             <p className="text-xs text-blue-600 mt-1">+12% from last month</p>
                           </div>
@@ -302,7 +387,7 @@ export default function Home() {
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-orange-600">High Risk</p>
+                            <p className="text-sm font-medium text-orange-600">{t('dashboard.atRiskStudents')}</p>
                             <p className="text-3xl font-bold text-orange-900">{statistics.highRiskStudents}</p>
                             <p className="text-xs text-orange-600 mt-1">Requires attention</p>
                           </div>
@@ -320,7 +405,7 @@ export default function Home() {
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-green-600">Avg Attendance</p>
+                            <p className="text-sm font-medium text-green-600">{t('dashboard.avgAttendance')}</p>
                             <p className="text-3xl font-bold text-green-900">{statistics.avgAttendance.toFixed(1)}%</p>
                             <p className="text-xs text-green-600 mt-1">+2.1% from last week</p>
                           </div>
@@ -338,7 +423,7 @@ export default function Home() {
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-purple-600">Avg Performance</p>
+                            <p className="text-sm font-medium text-purple-600">{t('dashboard.avgPerformance')}</p>
                             <p className="text-3xl font-bold text-purple-900">{statistics.avgPerformance.toFixed(1)}%</p>
                             <p className="text-xs text-purple-600 mt-1">+1.8% from last week</p>
                           </div>
@@ -362,7 +447,7 @@ export default function Home() {
                             <AlertTriangle className="w-5 h-5 text-red-600" />
                           </div>
                           <div>
-                            <p className="font-medium text-slate-900">High Risk Students</p>
+                            <p className="font-medium text-slate-900">{t('dashboard.atRiskStudents')}</p>
                             <p className="text-sm text-slate-500">{statistics.highRiskStudents} need attention</p>
                           </div>
                         </div>
@@ -396,7 +481,7 @@ export default function Home() {
                             <FileText className="w-5 h-5 text-green-600" />
                           </div>
                           <div>
-                            <p className="font-medium text-slate-900">Generate Report</p>
+                            <p className="font-medium text-slate-900">{t('dashboard.generateReport')}</p>
                             <p className="text-sm text-slate-500">Export student data</p>
                           </div>
                         </div>
@@ -516,7 +601,7 @@ export default function Home() {
                                       variant="ghost" 
                                       size="sm" 
                                       className="h-8 w-8 p-0"
-                                      onClick={() => window.open(`/students/${student.id}`, '_blank')}
+                                      onClick={() => window.open(`/students/${student.StudentID}`, '_blank')}
                                     >
                                       <Eye className="w-4 h-4" />
                                     </Button>

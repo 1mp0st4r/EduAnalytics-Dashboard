@@ -160,7 +160,7 @@ export default function Dashboard() {
   const renderDashboard = () => (
     <>
       <div className="flex justify-end mb-4">
-        <p className="text-sm text-gray-600">Academic Year 2024-2025 // Fall Semester</p>
+        <p className="text-sm text-gray-600">Academic Year 2025-2026 // Spring Semester</p>
       </div>
 
       {/* Stats Cards */}

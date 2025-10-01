@@ -48,7 +48,7 @@ const mockConnections: DatabaseConnection[] = [
     port: 3306,
     database: "StudentAnalyticsDB",
     status: "connected",
-    lastSync: "2024-01-28T10:30:00Z",
+    lastSync: "2025-01-28T10:30:00Z",
     recordCount: 12470,
   },
   {
@@ -59,7 +59,7 @@ const mockConnections: DatabaseConnection[] = [
     port: 3306,
     database: "academic_records",
     status: "connected",
-    lastSync: "2024-01-28T09:15:00Z",
+    lastSync: "2025-01-28T09:15:00Z",
     recordCount: 45678,
   },
   {
@@ -70,7 +70,7 @@ const mockConnections: DatabaseConnection[] = [
     port: 3306,
     database: "attendance_data",
     status: "error",
-    lastSync: "2024-01-27T14:22:00Z",
+    lastSync: "2025-01-27T14:22:00Z",
     recordCount: 23456,
   },
 ]

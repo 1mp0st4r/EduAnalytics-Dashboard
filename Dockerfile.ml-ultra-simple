@@ -1,0 +1,12 @@
+FROM python:3.9-alpine
+
+WORKDIR /app
+
+# Copy ML service files
+COPY ml_api_ultra_simple.py .
+
+# Expose port
+EXPOSE 8001
+
+# Start ML API service
+CMD ["python", "ml_api_ultra_simple.py"]

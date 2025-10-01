@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
     switch (type) {
       case 'overview':
         const stats = await neonService.getStatistics()
-        const highRiskStudents = await neonService.getStudents({ riskLevel: 'High' })
-        const criticalRiskStudents = await neonService.getStudents({ riskLevel: 'Critical' })
+        const highRiskStudents = await neonService.getStudents({ riskLevel: 'High', limit: 1000 })
+        const criticalRiskStudents = await neonService.getStudents({ riskLevel: 'Critical', limit: 1000 })
         
         return NextResponse.json({
           success: true,
@@ -26,12 +26,12 @@ export async function GET(request: NextRequest) {
         })
 
       case 'risk-analysis':
-        const allStudents = await neonService.getStudents({ limit: 1000 })
+        const allStudents = await neonService.getStudents({ limit: 10000 })
         const statsForRiskAnalysis = await neonService.getStatistics()
         const riskAnalysis = {
-          totalStudents: allStudents.length,
-          dropoutRate: (statsForRiskAnalysis.dropoutStudents / statsForRiskAnalysis.totalStudents) * 100,
-          avgRiskScore: allStudents.reduce((sum: number, s: any) => sum + (s.RiskScore || 0), 0) / allStudents.length,
+          totalStudents: statsForRiskAnalysis.totalStudents, // Use stats instead of allStudents.length for consistency
+          dropoutRate: statsForRiskAnalysis.totalStudents > 0 ? (statsForRiskAnalysis.dropoutStudents / statsForRiskAnalysis.totalStudents) * 100 : 0,
+          avgRiskScore: allStudents.length > 0 ? allStudents.reduce((sum: number, s: any) => sum + (s.RiskScore || 0), 0) / allStudents.length : 0,
           riskFactors: {
             lowAttendance: allStudents.filter((s: any) => parseFloat(s.AvgAttendance_LatestTerm) < 70).length,
             poorPerformance: allStudents.filter((s: any) => parseFloat(s.AvgMarks_LatestTerm) < 50).length,

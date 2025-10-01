@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
 import { 
   GraduationCap, 
   TrendingUp, 
@@ -30,6 +32,7 @@ import {
   Minus
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Chatbot } from "@/components/ai/chatbot"
 
 interface StudentData {
   id: string
@@ -62,15 +65,37 @@ interface StudentStats {
 }
 
 export default function StudentDashboard() {
+  const { user, isAuthenticated, logout, isLoading: authLoading } = useAuth()
+  const router = useRouter()
   const [studentData, setStudentData] = useState<StudentData | null>(null)
   const [statistics, setStatistics] = useState<StudentStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("overview")
 
+  // Check authentication
   useEffect(() => {
+    if (authLoading) return // Wait for auth to load
+    
+    if (!isAuthenticated || !user) {
+      router.push('/login')
+      return
+    }
+    
+    if (user.userType !== 'student') {
+      // Redirect to appropriate dashboard based on user type
+      if (user.userType === 'admin') {
+        router.push('/')
+      } else if (user.userType === 'mentor') {
+        router.push('/mentor-dashboard')
+      } else if (user.userType === 'parent') {
+        router.push('/parent-portal')
+      }
+      return
+    }
+    
     fetchStudentData()
-  }, [])
+  }, [isAuthenticated, user, authLoading, router])
 
   const fetchStudentData = async () => {
     setLoading(true)
@@ -193,13 +218,16 @@ export default function StudentDashboard() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh
               </Button>
-              <Button
-                onClick={() => window.open('/', '_self')}
-                variant="outline"
-                className="h-10"
-              >
-                Logout
-              </Button>
+                <Button
+                  onClick={() => {
+                    logout()
+                    router.push('/')
+                  }}
+                  variant="outline"
+                  className="h-10"
+                >
+                  Logout
+                </Button>
             </div>
           </div>
         </div>
@@ -566,6 +594,9 @@ export default function StudentDashboard() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* AI Chatbot */}
+      <Chatbot />
     </div>
   )
 }

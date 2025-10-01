@@ -10,8 +10,36 @@ import { TrendingUp, TrendingDown, Users, AlertTriangle, Brain, Target } from "l
 export default function PredictiveAnalytics() {
   const [selectedTimeframe, setSelectedTimeframe] = useState("6months")
   const [predictions, setPredictions] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Mock predictive data - in real app, this would come from ML models
+  // Fetch real predictive data from API
+  useEffect(() => {
+    fetchPredictiveData()
+  }, [selectedTimeframe])
+
+  const fetchPredictiveData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch(`/api/analytics/predictive?timeframe=${selectedTimeframe}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setPredictions(data.data)
+      } else {
+        setError(data.error || 'Failed to fetch predictive data')
+      }
+    } catch (err) {
+      console.error('Error fetching predictive data:', err)
+      setError('Failed to connect to analytics service')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Fallback mock data for development
   const mockPredictions = {
     "6months": {
       totalAtRisk: 156,
@@ -44,11 +72,44 @@ export default function PredictiveAnalytics() {
   }
 
   useEffect(() => {
-    // Simulate API call to get predictions
-    setTimeout(() => {
-      setPredictions(mockPredictions[selectedTimeframe as keyof typeof mockPredictions])
-    }, 1000)
+    fetchPredictiveData()
   }, [selectedTimeframe])
+
+  const currentPredictions = predictions || mockPredictions[selectedTimeframe as keyof typeof mockPredictions] || mockPredictions["6months"]
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Predictive Analytics</h2>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-32 bg-gray-200 animate-pulse rounded-lg"></div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Predictive Analytics</h2>
+          <Button onClick={fetchPredictiveData} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">Error: {error}</p>
+          <p className="text-red-600 text-sm mt-1">Using fallback data for demonstration</p>
+        </div>
+      </div>
+    )
+  }
 
   const getTrendIcon = (direction: string) => {
     return direction === "increasing" ? (
@@ -111,6 +172,20 @@ export default function PredictiveAnalytics() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Data Source Warning */}
+      {predictions?.warning && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <AlertTriangle className="h-5 w-5 text-orange-500 mr-2" />
+            <div>
+              <h4 className="text-orange-800 font-medium">Demo Data Active</h4>
+              <p className="text-orange-600 text-sm mt-1">{predictions.warning}</p>
+              <p className="text-orange-500 text-xs mt-1">Data source: {predictions.dataSource}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

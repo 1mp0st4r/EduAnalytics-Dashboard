@@ -23,11 +23,13 @@ import {
   Mail,
   AlertTriangle
 } from "lucide-react"
+import { LanguageToggle } from "@/components/ui/language-toggle"
 
 interface HeaderProps {
   onRefresh?: () => void
   onTestDatabase?: () => void
   onTestEmail?: () => void
+  onLogout?: () => void
   notificationCount?: number
   isLoading?: boolean
 }
@@ -36,6 +38,7 @@ export function Header({
   onRefresh, 
   onTestDatabase, 
   onTestEmail, 
+  onLogout,
   notificationCount = 0,
   isLoading = false 
 }: HeaderProps) {
@@ -146,6 +149,9 @@ export function Header({
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* Language Toggle */}
+          <LanguageToggle />
+
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -166,7 +172,10 @@ export function Header({
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600">
+              <DropdownMenuItem 
+                className="text-red-600"
+                onClick={onLogout}
+              >
                 <LogOut className="w-4 h-4 mr-2" />
                 Logout
               </DropdownMenuItem>

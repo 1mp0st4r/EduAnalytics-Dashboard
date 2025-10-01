@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 const nodemailer = require('nodemailer')
-import { dbService } from "../../../lib/database-service"
+import { neonService } from "../../../lib/neon-service"
 
 // Email notification system
 export async function POST(request: NextRequest) {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get student data
-    const student = await dbService.getStudentById(studentId)
+    const student = await neonService.getStudentById(studentId)
     if (!student) {
       return NextResponse.json(
         { success: false, error: "Student not found" },
