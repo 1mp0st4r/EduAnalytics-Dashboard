@@ -28,15 +28,22 @@ class Logger {
   private logDir: string
   private maxFileSize: number
   private maxFiles: number
+  private isServerless: boolean
 
   constructor() {
+    this.isServerless = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production'
     this.logDir = path.join(process.cwd(), 'logs')
     this.maxFileSize = 10 * 1024 * 1024 // 10MB
     this.maxFiles = 5
     
-    // Ensure log directory exists
-    if (!fs.existsSync(this.logDir)) {
-      fs.mkdirSync(this.logDir, { recursive: true })
+    // Only create log directory if not in serverless environment
+    if (!this.isServerless && !fs.existsSync(this.logDir)) {
+      try {
+        fs.mkdirSync(this.logDir, { recursive: true })
+      } catch (error) {
+        console.warn('Failed to create log directory, falling back to console logging:', error)
+        this.isServerless = true
+      }
     }
   }
 
@@ -75,24 +82,46 @@ class Logger {
     }
 
     const logLine = this.formatLogEntry(logEntry)
-    const fileName = `${level.toLowerCase()}.log`
-    const filePath = path.join(this.logDir, fileName)
 
-    // Write to file
-    fs.appendFileSync(filePath, logLine + '\n')
+    // In serverless environments, only log to console
+    if (this.isServerless) {
+      this.logToConsole(level, message, context, metadata, error, timestamp)
+      return
+    }
 
-    // Rotate log file if it's too large
-    this.rotateLogFile(filePath)
+    try {
+      const fileName = `${level.toLowerCase()}.log`
+      const filePath = path.join(this.logDir, fileName)
+
+      // Write to file
+      fs.appendFileSync(filePath, logLine + '\n')
+
+      // Rotate log file if it's too large
+      this.rotateLogFile(filePath)
+    } catch (error) {
+      // If file writing fails, fall back to console logging
+      console.warn('Failed to write to log file, falling back to console logging:', error)
+      this.logToConsole(level, message, context, metadata, error, timestamp)
+    }
 
     // Also log to console in development
     if (process.env.NODE_ENV === 'development') {
-      const consoleMessage = `[${timestamp}] ${level}: ${message}`
-      if (context) console.log(`${consoleMessage} (${context})`)
-      else console.log(consoleMessage)
-      
-      if (error) console.error(error)
-      if (metadata) console.log('Metadata:', metadata)
+      this.logToConsole(level, message, context, metadata, error, timestamp)
     }
+  }
+
+  private logToConsole(level: LogLevel, message: string, context?: string, metadata?: Record<string, any>, error?: Error, timestamp?: string) {
+    const time = timestamp || new Date().toISOString()
+    const consoleMessage = `[${time}] ${level}: ${message}`
+    
+    if (context) {
+      console.log(`${consoleMessage} (${context})`)
+    } else {
+      console.log(consoleMessage)
+    }
+    
+    if (error) console.error(error)
+    if (metadata) console.log('Metadata:', metadata)
   }
 
   private rotateLogFile(filePath: string) {
