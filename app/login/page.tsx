@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +23,9 @@ import {
 import Link from "next/link"
 
 export default function LoginPage() {
+  const { login, register } = useAuth()
+  const router = useRouter()
+  
   const [loginData, setLoginData] = useState({
     email: "",
     password: ""
@@ -45,28 +50,18 @@ export default function LoginPage() {
     setError("")
     
     try {
-      // Simulate login process
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Simple validation - only require email if not using quick access
-      if (!loginData.email) {
-        setError("Please enter your email")
+      if (!loginData.email || !loginData.password) {
+        setError("Please enter both email and password")
         return
       }
       
-      // Determine user type based on email
-      const userType = loginData.email.includes('admin') ? 'admin' : 'student'
+      const result = await login(loginData.email, loginData.password)
       
-      // Store login state in localStorage to prevent redirect loop
-      localStorage.setItem('isLoggedIn', 'true')
-      localStorage.setItem('userType', userType)
-      localStorage.setItem('userEmail', loginData.email)
-      
-      // Redirect based on user type
-      if (userType === 'admin') {
-        window.location.href = '/'
+      if (result.success) {
+        // Redirect based on user type
+        router.push('/')
       } else {
-        window.location.href = '/student-dashboard'
+        setError(result.error || "Login failed. Please try again.")
       }
     } catch (err) {
       setError("Login failed. Please try again.")
@@ -80,22 +75,22 @@ export default function LoginPage() {
     setError("")
     
     try {
-      // Simulate login process
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // Use demo credentials for quick login
+      const credentials = {
+        admin: { email: 'admin@school.edu', password: 'admin123' },
+        student: { email: 'student1@school.edu', password: 'password123' }
+      }
       
-      // Store login state in localStorage to prevent redirect loop
-      localStorage.setItem('isLoggedIn', 'true')
-      localStorage.setItem('userType', userType)
-      localStorage.setItem('userEmail', userType === 'admin' ? 'admin@example.com' : 'student@example.com')
+      const { email, password } = credentials[userType]
+      const result = await login(email, password)
       
-      // Redirect based on user type
-      if (userType === 'admin') {
-        window.location.href = '/'
+      if (result.success) {
+        router.push('/')
       } else {
-        window.location.href = '/student-dashboard'
+        setError(result.error || "Quick login failed. Please try again.")
       }
     } catch (err) {
-      setError("Login failed. Please try again.")
+      setError("Quick login failed. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -124,19 +119,27 @@ export default function LoginPage() {
         return
       }
       
-      // Simulate signup process
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      setSuccess("Account created successfully! You can now login.")
-      
-      // Reset form
-      setSignupData({
-        fullName: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        userType: "student"
+      const result = await register({
+        email: signupData.email,
+        password: signupData.password,
+        fullName: signupData.fullName,
+        userType: signupData.userType
       })
+      
+      if (result.success) {
+        setSuccess("Account created successfully! You can now login.")
+        
+        // Reset form
+        setSignupData({
+          fullName: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          userType: "student"
+        })
+      } else {
+        setError(result.error || "Signup failed. Please try again.")
+      }
     } catch (err) {
       setError("Signup failed. Please try again.")
     } finally {
