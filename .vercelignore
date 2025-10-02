@@ -1,0 +1,33 @@
+# Python virtual environments
+ml-env/
+env/
+venv/
+
+# ML Models and Data Files
+*.pkl
+*.joblib
+*.h5
+*.model
+*.csv
+*.xlsx
+*.xls
+eduanalytics_model.pkl
+final_synthetic_dropout_data_rajasthan.csv
+student_contact_and_mentor_list.csv
+
+# Rasa Bot
+rasa-bot/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+logs/
+*.log
+
+# Development files
+presentation.pdf
+scripts/
+*.md
