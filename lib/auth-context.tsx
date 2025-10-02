@@ -155,6 +155,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('isLoggedIn')
     localStorage.removeItem('userType')
     localStorage.removeItem('userEmail')
+    
+    // Redirect to login page
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login'
+    }
   }
 
   const refreshAuthToken = async (): Promise<boolean> => {

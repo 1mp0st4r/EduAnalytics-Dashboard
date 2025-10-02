@@ -77,7 +77,7 @@ export default function LoginPage() {
     try {
       // Use demo credentials for quick login
       const credentials = {
-        admin: { email: 'admin@school.edu', password: 'admin123' },
+        admin: { email: 'admin@eduanalytics.com', password: 'admin123' },
         student: { email: 'student1@school.edu', password: 'password123' }
       }
       
@@ -401,10 +401,10 @@ export default function LoginPage() {
         <Card className="mt-6 border-0 shadow-lg bg-gradient-to-r from-blue-50 to-indigo-50">
           <CardContent className="p-4">
             <h3 className="font-semibold text-slate-900 mb-2">Demo Credentials</h3>
-            <div className="space-y-1 text-sm text-slate-600">
-              <p><strong>Admin:</strong> admin@school.edu / admin123</p>
-              <p><strong>Student:</strong> student1@school.edu / password123</p>
-            </div>
+                <div className="space-y-1 text-sm text-slate-600">
+                  <p><strong>Admin:</strong> admin@eduanalytics.com / admin123</p>
+                  <p><strong>Student:</strong> student1@school.edu / password123</p>
+                </div>
           </CardContent>
         </Card>
       </div>
