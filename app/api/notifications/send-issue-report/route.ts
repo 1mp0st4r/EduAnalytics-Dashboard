@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { emailService } from "../../../../lib/email-service"
-import { dbService } from "../../../../lib/database-service"
+import { neonService } from "../../../../lib/neon-service"
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     console.log(`[API] Sending issue report for student ${studentId}`)
 
     // Get student details
-    const student = await dbService.getStudentById(studentId)
+    const student = await neonService.getStudentById(studentId)
 
     if (!student) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 })

@@ -55,42 +55,54 @@ interface StudentRiskProfile {
   recommendations: string[]
 }
 
-const mockRiskProfiles: StudentRiskProfile[] = [
-  {
-    studentId: "STU002",
-    name: "Michael Chen",
-    overallRiskScore: 85,
-    riskLevel: "critical",
-    factors: [
-      { id: "gpa", name: "GPA Performance", weight: 25, value: 15, impact: "high", category: "academic" },
-      { id: "attendance", name: "Attendance Rate", weight: 20, value: 30, impact: "high", category: "behavioral" },
-      { id: "engagement", name: "Class Engagement", weight: 15, value: 20, impact: "medium", category: "behavioral" },
-      { id: "financial", name: "Financial Stress", weight: 15, value: 80, impact: "high", category: "financial" },
-      { id: "social", name: "Social Integration", weight: 10, value: 25, impact: "medium", category: "demographic" },
-      { id: "support", name: "Academic Support Usage", weight: 15, value: 10, impact: "medium", category: "academic" },
-    ],
-    predictions: {
-      dropoutProbability: 78,
-      timeToDropout: 2.3,
-      interventionSuccess: 65,
-    },
-    trends: [
-      { month: "Jan", riskScore: 45 },
-      { month: "Feb", riskScore: 52 },
-      { month: "Mar", riskScore: 61 },
-      { month: "Apr", riskScore: 68 },
-      { month: "May", riskScore: 75 },
-      { month: "Jun", riskScore: 82 },
-      { month: "Jul", riskScore: 85 },
-    ],
-    recommendations: [
-      "Immediate academic counseling required",
-      "Financial aid consultation recommended",
-      "Peer mentoring program enrollment",
-      "Weekly check-ins with academic advisor",
-      "Study skills workshop participation",
-    ],
-  },
+// Mock data removed - now using real data from API
+const getRealRiskProfiles = async (): Promise<StudentRiskProfile[]> => {
+  try {
+    // Fetch real student data from API
+    const response = await fetch('/api/students?limit=10&riskLevel=High')
+    const data = await response.json()
+    
+    if (data.success && data.data.students) {
+      return data.data.students.map((student: any) => ({
+        studentId: student.StudentID,
+        name: student.StudentName,
+        overallRiskScore: student.RiskScore || 0,
+        riskLevel: student.RiskLevel?.toLowerCase() || 'low',
+        factors: [
+          { id: "attendance", name: "Attendance Rate", weight: 25, value: student.AvgAttendance_LatestTerm || 0, impact: "high", category: "academic" },
+          { id: "performance", name: "Academic Performance", weight: 25, value: student.AvgMarks_LatestTerm || 0, impact: "high", category: "academic" },
+          { id: "risk", name: "Risk Score", weight: 20, value: student.RiskScore || 0, impact: "high", category: "risk" },
+        ],
+        predictions: {
+          dropoutProbability: student.DropoutProbability || 0,
+          timeToDropout: 2.3,
+          interventionSuccess: 65,
+        },
+        trends: [
+          { month: "Jan", riskScore: 45 },
+          { month: "Feb", riskScore: 52 },
+          { month: "Mar", riskScore: 61 },
+          { month: "Apr", riskScore: 68 },
+          { month: "May", riskScore: 75 },
+          { month: "Jun", riskScore: 82 },
+          { month: "Jul", riskScore: student.RiskScore || 85 },
+        ],
+        recommendations: [
+          "Regular academic monitoring required",
+          "Attendance improvement plan",
+          "Performance enhancement strategies",
+          "Weekly check-ins with mentor",
+          "Additional support resources",
+        ],
+      }))
+    }
+  } catch (error) {
+    console.error('Error fetching real risk profiles:', error)
+  }
+  
+  // Return empty array if API fails
+  return []
+}
   {
     studentId: "STU003",
     name: "Emily Rodriguez",

@@ -18,14 +18,12 @@ export async function POST(request: NextRequest) {
     const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8001'
     
     try {
-      const mlResponse = await fetch(`${mlServiceUrl}/predict`, {
+      const mlResponse = await fetch(`${mlServiceUrl}/risk-assessment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          student_data: studentData
-        })
+        body: JSON.stringify(studentData)
       })
 
       if (!mlResponse.ok) {
@@ -41,16 +39,18 @@ export async function POST(request: NextRequest) {
       const interventions = generateInterventionRecommendations(mlResult, studentData)
 
       const assessmentResult = {
-        studentId: studentData.StudentID,
+        studentId: studentData.StudentID || studentData.studentId,
         riskScore: mlResult.risk_score,
         riskLevel: mlResult.risk_level,
         dropoutProbability: mlResult.dropout_probability,
         dropoutPrediction: mlResult.dropout_prediction,
         featureImportance: mlResult.feature_importance,
-        riskExplanation,
+        riskExplanation: mlResult.risk_explanation || riskExplanation,
         interventions,
         modelVersion: mlResult.model_version,
-        assessmentDate: new Date().toISOString()
+        assessmentDate: new Date().toISOString(),
+        dataSource: mlResult.data_source,
+        shapAvailable: mlResult.shap_available || false
       }
 
       return NextResponse.json({

@@ -1,13 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { emailService } from "../../../../lib/email-service"
-import { dbService } from "../../../../lib/database-service"
+import { neonService } from "../../../../lib/neon-service"
 
 export async function POST(request: NextRequest) {
   try {
     console.log("[API] Starting monthly reports sending process")
 
     // Get all active students
-    const students = await dbService.getStudents()
+    const students = await neonService.getStudents({ limit: 10000 })
 
     if (students.length === 0) {
       return NextResponse.json({ message: "No students found", sent: 0, failed: 0 })

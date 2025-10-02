@@ -83,28 +83,93 @@ export async function POST(request: NextRequest) {
 // Generate AI response with intelligent chatbot
 async function generateAIResponse(message: string, studentData: any, conversationId?: string): Promise<string> {
   try {
-    // For now, use fallback response to test basic functionality
-    return generateFallbackResponse(message, studentData)
+    // Try to use real Rasa service first
+    const { RealRasaService } = await import('../../../lib/rasa-service-real')
+    const rasaService = new RealRasaService(conversationId || `student_${studentData.StudentID}`)
     
-    // TODO: Re-enable Rasa service once basic functionality is working
-    // const { SimpleRasaService } = await import('../../../lib/rasa-service-simple')
-    // const rasaService = new SimpleRasaService(conversationId || `student_${studentData.StudentID}`)
-    // const response = await rasaService.sendMessage(message, {
-    //   studentId: studentData.StudentID,
-    //   studentName: studentData.StudentName,
-    //   classLevel: studentData.StudentClass,
-    //   attendance: studentData.AvgAttendance_LatestTerm,
-    //   performance: studentData.AvgMarks_LatestTerm,
-    //   riskLevel: studentData.RiskLevel,
-    //   mentorName: studentData.MentorName,
-    //   schoolName: studentData.SchoolName
-    // })
-    // return response
+    // Set student context for personalized responses
+    rasaService.setStudentContext({
+      studentId: studentData.StudentID,
+      studentName: studentData.StudentName,
+      classLevel: studentData.StudentClass,
+      attendance: studentData.AvgAttendance_LatestTerm,
+      performance: studentData.AvgMarks_LatestTerm,
+      riskLevel: studentData.RiskLevel,
+      mentorName: studentData.MentorName,
+      schoolName: studentData.SchoolName
+    })
+    
+    // Test connection first
+    const isConnected = await rasaService.testConnection()
+    
+    if (isConnected) {
+      console.log('[Chat API] Using real Rasa AI service')
+      const response = await rasaService.sendMessage(message, {
+        studentId: studentData.StudentID,
+        studentName: studentData.StudentName,
+        classLevel: studentData.StudentClass,
+        attendance: studentData.AvgAttendance_LatestTerm,
+        performance: studentData.AvgMarks_LatestTerm,
+        riskLevel: studentData.RiskLevel,
+        mentorName: studentData.MentorName,
+        schoolName: studentData.SchoolName
+      })
+      return response
+    } else {
+      console.log('[Chat API] Rasa service not available, using enhanced fallback')
+      return generateEnhancedFallbackResponse(message, studentData)
+    }
     
   } catch (error) {
-    console.error('Chatbot service error:', error)
-    return "Sorry, I'm having trouble responding right now. Please try again later."
+    console.error('[Chat API] Rasa service error:', error)
+    console.log('[Chat API] Using enhanced fallback response')
+    return generateEnhancedFallbackResponse(message, studentData)
   }
+}
+
+// Enhanced fallback response generator with better context awareness
+function generateEnhancedFallbackResponse(message: string, studentData: any): string {
+  const context = {
+    studentName: studentData.StudentName || 'Student',
+    classLevel: studentData.StudentClass || 'Unknown',
+    attendance: studentData.AvgAttendance_LatestTerm || 0,
+    performance: studentData.AvgMarks_LatestTerm || 0,
+    riskLevel: studentData.RiskLevel || 'Unknown',
+    mentorName: studentData.MentorName || 'Your mentor',
+    schoolName: studentData.SchoolName || 'Your school'
+  }
+
+  const lowerMessage = message.toLowerCase()
+  
+  // Enhanced contextual responses with real student data
+  if (lowerMessage.includes('attendance')) {
+    if (context.attendance < 75) {
+      return `I can see your attendance is currently ${context.attendance}%, which is below the recommended 75%. This is concerning and could impact your academic success. Let's work together to improve this. What challenges are you facing with regular attendance? I can help you create a plan to get back on track.`
+    } else {
+      return `Great job! Your attendance rate of ${context.attendance}% shows excellent commitment to your studies. This consistency is a strong foundation for academic success. Keep up the good work!`
+    }
+  }
+
+  if (lowerMessage.includes('marks') || lowerMessage.includes('grades') || lowerMessage.includes('performance')) {
+    if (context.performance < 60) {
+      return `I notice your current performance is ${context.performance}%, which indicates there's room for improvement. Don't worry - I'm here to help you develop effective study strategies. What subjects are you finding most challenging? Together we can create a plan to boost your academic performance.`
+    } else if (context.performance < 80) {
+      return `Your performance of ${context.performance}% is good! With some focused effort, you can reach even higher levels. What areas would you like to focus on to improve further?`
+    } else {
+      return `Excellent work! Your performance of ${context.performance}% is outstanding. You're clearly dedicated to your studies and should be proud of your achievements!`
+    }
+  }
+
+  if (lowerMessage.includes('risk') || lowerMessage.includes('struggling')) {
+    if (context.riskLevel === 'Critical' || context.riskLevel === 'High') {
+      return `I understand you might be going through a challenging time. Your current risk level is ${context.riskLevel}, which means we need to address some concerns. Remember, ${context.mentorName} and I are here to support you. What specific challenges are you facing? Let's work together to create a plan to get you back on track.`
+    } else {
+      return `You're doing well overall with a ${context.riskLevel} risk level! If you're feeling concerned about anything, I'm here to help. What's on your mind?`
+    }
+  }
+
+  // Default enhanced response
+  return `Hello ${context.studentName}! I'm your AI study assistant, and I'm here to help you succeed at ${context.schoolName}. I can see you're in class ${context.classLevel} with ${context.attendance}% attendance and ${context.performance}% performance. How can I support your academic journey today?`
 }
 
 // Fallback response generator (keep the old logic as backup)

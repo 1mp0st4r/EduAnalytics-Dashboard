@@ -125,6 +125,82 @@ export default function StudentAnalyzer({ studentData }: StudentAnalyzerProps) {
     }))
   }
 
+  // Generate recommendations from risk flags
+  const generateRecommendationsFromFlags = (flags: any[]) => {
+    const recommendations = []
+    
+    flags.forEach(flag => {
+      if (flag.flagType === 'red') {
+        recommendations.push({
+          category: flag.category,
+          priority: flag.severity,
+          description: getRecommendationForFlag(flag.factor),
+          timeline: flag.severity === 'critical' || flag.severity === 'high' ? 'Immediate' : 'Within 2 weeks'
+        })
+      }
+    })
+    
+    return recommendations
+  }
+
+  // Generate interventions from risk profile
+  const generateInterventionsFromProfile = (profile: any) => {
+    const interventions = []
+    
+    if (profile.riskLevel === 'Critical' || profile.riskLevel === 'High') {
+      interventions.push({
+        type: 'counseling',
+        priority: 'high',
+        title: 'Individual Counseling Session',
+        description: 'Schedule one-on-one counseling to address risk factors',
+        timeline: 'Within 1 week',
+        successRate: 85
+      })
+    }
+    
+    if (profile.redFlags.some((flag: any) => flag.category === 'academic')) {
+      interventions.push({
+        type: 'academic_support',
+        priority: 'medium',
+        title: 'Academic Support Program',
+        description: 'Provide additional academic support and tutoring',
+        timeline: 'Within 2 weeks',
+        successRate: 75
+      })
+    }
+    
+    if (profile.redFlags.some((flag: any) => flag.category === 'socioeconomic')) {
+      interventions.push({
+        type: 'financial_support',
+        priority: 'high',
+        title: 'Financial Support Assessment',
+        description: 'Evaluate and provide financial assistance if needed',
+        timeline: 'Within 1 week',
+        successRate: 80
+      })
+    }
+    
+    return interventions
+  }
+
+  // Get specific recommendations for each flag type
+  const getRecommendationForFlag = (factor: string) => {
+    const recommendations: { [key: string]: string } = {
+      'IsFirstGenerationLearner': 'Provide additional academic guidance and family support programs',
+      'MarksTrend': 'Implement tutoring and study support programs',
+      'AvgAttendance LatestTerm': 'Investigate attendance issues and implement attendance tracking',
+      'WorksPartTime': 'Assess financial needs and provide support to reduce work burden',
+      'MediumChanged': 'Provide language support and adaptation assistance',
+      'IsMotherLiterate': 'Engage family through literacy programs and educational workshops',
+      'FailureRate LatestTerm': 'Implement intensive academic support and remedial classes',
+      'FamilyAnnualIncome': 'Assess financial assistance needs and scholarship opportunities',
+      'HasReliableInternet': 'Provide internet access support and digital resources',
+      'IsPreparingCompetitiveExam': 'Offer exam preparation support and guidance'
+    }
+    
+    return recommendations[factor] || 'Implement targeted intervention based on identified risk factor'
+  }
+
   const calculateRiskFactors = (data: StudentData) => {
     const factors = []
 

@@ -55,17 +55,43 @@ export default function StudentDashboard({ user, onLogout }: { user: any; onLogo
   const [riskAssessment, setRiskAssessment] = useState<any>(null)
   const [assessingRisk, setAssessingRisk] = useState(false)
 
-  // Mock student ID for demo - in real app, this would come from authentication
-  const studentId = "RJ_2025"
+  // Get student ID from authentication context or use first available student for demo
+  const [studentId, setStudentId] = useState<string>("")
 
   useEffect(() => {
-    fetchStudentData()
-    fetchAnalytics()
+    initializeStudentId()
   }, [])
 
-  const fetchStudentData = async () => {
+  const initializeStudentId = async () => {
     try {
-      const response = await fetch(`/api/students/${studentId}`)
+      // Get first available student for demo purposes
+      const response = await fetch('/api/students?limit=1')
+      const data = await response.json()
+      
+      if (data.success && data.data.students && data.data.students.length > 0) {
+        const firstStudent = data.data.students[0]
+        setStudentId(firstStudent.StudentID)
+        
+        // Fetch student data and analytics after setting student ID
+        fetchStudentData(firstStudent.StudentID)
+        fetchAnalytics()
+      } else {
+        setError("No student data available")
+        setLoading(false)
+      }
+    } catch (err) {
+      console.error("Error initializing student ID:", err)
+      setError("Failed to load student data")
+      setLoading(false)
+    }
+  }
+
+  const fetchStudentData = async (id?: string) => {
+    const currentStudentId = id || studentId
+    if (!currentStudentId) return
+    
+    try {
+      const response = await fetch(`/api/students/${currentStudentId}`)
       const data = await response.json()
       
       if (data.success) {

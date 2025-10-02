@@ -29,20 +29,30 @@ export class EmailService {
 
   constructor() {
     this.fromEmail = process.env.FROM_EMAIL || "noreply@edusupport.gov.in"
-    this.fromName = process.env.FROM_NAME || "शिक्षा सहायक / EduSupport"
+    this.fromName = process.env.FROM_NAME || "EduAnalytics Support"
 
-    this.transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false, // Use TLS
+    // Use real SMTP configuration
+    const smtpConfig = {
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: parseInt(process.env.SMTP_PORT || "587"),
+      secure: process.env.SMTP_SECURE === "true", // Use TLS for port 587
       auth: {
         user: this.fromEmail,
-        pass: process.env.EMAIL_API_KEY, // Gmail App Password
+        pass: process.env.EMAIL_API_KEY, // Gmail App Password or SMTP password
       },
       tls: {
         rejectUnauthorized: false,
       },
-    })
+    }
+
+    console.log(`📧 Email Service Configuration:`)
+    console.log(`   Host: ${smtpConfig.host}`)
+    console.log(`   Port: ${smtpConfig.port}`)
+    console.log(`   From: ${this.fromEmail}`)
+    console.log(`   Secure: ${smtpConfig.secure}`)
+    console.log(`   Auth configured: ${!!smtpConfig.auth.pass}`)
+
+    this.transporter = nodemailer.createTransport(smtpConfig)
   }
 
   async sendEmail(notification: EmailNotification): Promise<boolean> {
@@ -630,6 +640,46 @@ EduAnalytics Team / एजुएनालिटिक्स टीम`
     } else {
       return `✅ बधाई! आपका बच्चा अच्छा प्रदर्शन कर रहा है। इसी तरह जारी रखें।
 ✅ Congratulations! Your child is performing well. Keep up the good work.`
+    }
+  }
+
+  async testEmailConnection(): Promise<boolean> {
+    try {
+      console.log("[Email Service] Testing email connection...")
+      await this.transporter.verify()
+      console.log("[Email Service] ✅ Email connection successful")
+      return true
+    } catch (error) {
+      console.error("[Email Service] ❌ Email connection failed:", error)
+      return false
+    }
+  }
+
+  async sendTestEmail(to: string): Promise<boolean> {
+    try {
+      console.log(`[Email Service] Sending test email to ${to}...`)
+      
+      const mailOptions = {
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: to,
+        subject: "EduAnalytics - Email Service Test",
+        html: `
+          <h2>🎉 Email Service Test Successful!</h2>
+          <p>This is a test email from the EduAnalytics Dashboard email service.</p>
+          <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
+          <p><strong>Service:</strong> EduAnalytics Support System</p>
+          <hr>
+          <p><em>If you received this email, the email service is working correctly!</em></p>
+        `,
+        text: `Email Service Test Successful! Timestamp: ${new Date().toISOString()}`
+      }
+
+      const info = await this.transporter.sendMail(mailOptions)
+      console.log(`[Email Service] ✅ Test email sent successfully: ${info.messageId}`)
+      return true
+    } catch (error) {
+      console.error("[Email Service] ❌ Test email failed:", error)
+      return false
     }
   }
 }

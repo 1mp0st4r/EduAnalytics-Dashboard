@@ -1,13 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { emailService } from "../../../../lib/email-service"
-import { dbService } from "../../../../lib/database-service"
+import { neonService } from "../../../../lib/neon-service"
 
 export async function POST(request: NextRequest) {
   try {
     console.log("[API] Starting high-risk alerts sending process")
 
     // Get high-risk students
-    const highRiskStudents = await dbService.getStudents({ riskLevel: "high" })
+    const highRiskStudents = await neonService.getStudents({ riskLevel: "High" })
 
     if (highRiskStudents.length === 0) {
       return NextResponse.json({ message: "No high-risk students found", sent: 0, failed: 0 })
